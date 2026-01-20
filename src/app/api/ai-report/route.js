@@ -15,8 +15,47 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
-    const rawKeys = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
-    const keyPool = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    // 1. Get Keys (Priority: Header User Key > System Env Key)
+    const userGeminiKey = request.headers.get('x-gemini-key');
+    const userOpenAIKey = request.headers.get('x-openai-key');
+
+    const systemKeys = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").split(',').map(k => k.trim()).filter(Boolean);
+    const geminiPool = userGeminiKey ? [userGeminiKey, ...systemKeys] : systemKeys;
+
+    async function analyzeWithOpenAI(prompt, apiKey) {
+        try {
+            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: [{ role: "user", content: prompt }],
+                    response_format: { type: "json_object" }
+                })
+            });
+            const data = await res.json();
+            const content = data.choices[0].message.content;
+            // The prompt asks for an array, GPT might wrap it in an object if told json_object
+            const jsonMatch = content.match(/\[.*\]/s);
+            return jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content).results;
+        } catch (e) {
+            console.error("OpenAI Analysis Fail:", e.message);
+            throw e;
+        }
+    }
+
+    async function analyzeWithGemini(prompt, apiKey) {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const jsonMatch = text.match(/\[.*\]/s);
+        if (!jsonMatch) throw new Error("JSON Format Error");
+        return JSON.parse(jsonMatch[0]);
+    }
 
     async function fetchRealMarketData() {
         const marketData = { exchange: [], global: [], crypto: [], commodities: [], updatedAt: new Date().toLocaleTimeString('ko-KR') };
@@ -71,66 +110,59 @@ export async function GET(request) {
 
     try {
         let items = [];
-        try {
-            const rssRes = await fetch('https://www.mk.co.kr/rss/30100041/', { signal: AbortSignal.timeout(5000) });
-            const xmlText = await rssRes.text();
-            const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-            let match;
-            while ((match = itemRegex.exec(xmlText)) !== null && items.length < 10) {
-                const content = match[1];
-                const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
-                const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
-                items.push({
-                    title: (titleMatch ? titleMatch[1] : "경제 뉴스").replace(/<[^>]*>/g, '').trim(),
-                    description: (descMatch ? descMatch[1] : "내용 생략").replace(/<[^>]*>/g, '').trim()
-                });
-            }
-        } catch (e) { console.error("RSS Fetch Fail"); }
+        const rssRes = await fetch('https://www.mk.co.kr/rss/30100041/', { signal: AbortSignal.timeout(5000) });
+        const xmlText = await rssRes.text();
+        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+        let match;
+        while ((match = itemRegex.exec(xmlText)) !== null && items.length < 10) {
+            const content = match[1];
+            const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
+            const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
+            items.push({
+                title: (titleMatch ? titleMatch[1] : "경제 뉴스").replace(/<[^>]*>/g, '').trim(),
+                description: (descMatch ? descMatch[1] : "내용 생략").replace(/<[^>]*>/g, '').trim()
+            });
+        }
 
-        if (items.length === 0) items = [{ title: "뉴스 데이터를 불러올 수 없습니다.", description: "나중에 다시 시도해 주세요." }];
-
-        if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
+        // Only use cache if no user keys provided (user keys should always trigger fresh analysis if refresh requested)
+        if (!forceRefresh && !userGeminiKey && !userOpenAIKey && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
             return NextResponse.json({ ...cachedReport, isAIFilled: true });
         }
 
         const marketInfo = await fetchRealMarketData();
 
         const buildSlides = (newsData, mInfo) => {
-            const slides = [
-                { type: 'cover', title: '투데이즈 경제 뉴스', subtitle: 'AI가 실시간으로 분석한 오늘의 주요 경제 브리핑' }
-            ];
-
-            // 10 news items -> 5 slides (2 each)
+            const slides = [{ type: 'cover', title: '투데이즈 경제 뉴스', subtitle: 'AI가 실시간으로 분석한 오늘의 주요 경제 브리핑' }];
             for (let i = 0; i < newsData.length; i += 2) {
                 slides.push({ type: 'news', title: '오늘의 주요 경제 기사', items: newsData.slice(i, i + 2) });
             }
-
             slides.push({ type: 'market', title: '국내외 주요 증시 지표', items: [...(mInfo?.exchange || []), ...(mInfo?.global || [])] });
             slides.push({ type: 'market', title: '원자재 현황', items: mInfo?.commodities || [] });
             slides.push({ type: 'market', title: '가상자산 시세', items: mInfo?.crypto || [] });
-
             return slides;
         };
 
         let aiResults = null;
         let isAIFilled = false;
 
-        if (keyPool.length > 0) {
-            try {
-                const genAI = new GoogleGenerativeAI(keyPool[0]);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const prompt = `주어진 뉴스 10개를 각각 요약(summary)하고 통찰(insight)을 JSON 배열로 출력해줘. 순서 엄격 준수. 뉴스 제목들: [${items.map(i => i.title).join(',')}]`;
-                const result = await Promise.race([
-                    model.generateContent(prompt),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 12000))
-                ]);
-                const text = result.response.text();
-                const jsonMatch = text.match(/\[.*\]/s);
-                if (jsonMatch) {
-                    aiResults = JSON.parse(jsonMatch[0]);
+        const prompt = `주어진 뉴스 10개를 각각 요약(summary)하고 통찰(insight)을 JSON 배열 형식으로 출력해줘. [{"summary": "...", "insight": "..."}] 순서대로 10개. 뉴스 제목들: [${items.map(i => i.title).join(',')}]`;
+
+        // Strategy: User OpenAI > User Gemini > System Gemini Pool
+        try {
+            if (userOpenAIKey) {
+                aiResults = await analyzeWithOpenAI(prompt, userOpenAIKey);
+            } else if (geminiPool.length > 0) {
+                aiResults = await analyzeWithGemini(prompt, geminiPool[0]);
+            }
+            if (aiResults) isAIFilled = true;
+        } catch (e) {
+            console.error("AI First Attempt Failed, trying next in pool if available.");
+            if (!userOpenAIKey && geminiPool.length > 1) {
+                try {
+                    aiResults = await analyzeWithGemini(prompt, geminiPool[1]);
                     isAIFilled = true;
-                }
-            } catch (e) { console.log("AI analysis skipped/slow."); }
+                } catch (e2) { }
+            }
         }
 
         const newsItems = items.map((it, idx) => ({
@@ -148,7 +180,7 @@ export async function GET(request) {
             isAIFilled
         };
 
-        if (isAIFilled) {
+        if (isAIFilled && !userGeminiKey && !userOpenAIKey) {
             cachedReport = finalReport;
             lastFetchTime = Date.now();
             supabaseAdmin.from('news_reports').insert([{ content: finalReport, content_hash: items.map(i => i.title).join('|') }]).then();

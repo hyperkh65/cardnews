@@ -6,8 +6,16 @@
 
 export async function fetchDailyEconomyReport(isRefresh = false) {
     try {
+        const geminiKey = localStorage.getItem('2days_gemini_key') || "";
+        const openaiKey = localStorage.getItem('2days_openai_key') || "";
+
         // 1. Fetch AI Summarized News & Real-time Market Data from Server
-        const response = await fetch(`/api/ai-report${isRefresh ? '?refresh=true' : ''}`);
+        const response = await fetch(`/api/ai-report${isRefresh ? '?refresh=true' : ''}`, {
+            headers: {
+                'x-gemini-key': geminiKey,
+                'x-openai-key': openaiKey
+            }
+        });
         if (!response.ok) throw new Error('Server AI Error');
         const aiData = await response.json();
 

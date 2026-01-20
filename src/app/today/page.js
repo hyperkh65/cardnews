@@ -13,7 +13,10 @@ import {
     Newspaper,
     Check,
     ChevronRight,
-    ArrowRight
+    ArrowRight,
+    Settings,
+    X,
+    Key
 } from 'lucide-react';
 import styles from './today.module.css';
 import html2canvas from 'html2canvas';
@@ -26,6 +29,8 @@ export default function TodaysMenuPage() {
     const [activeSlideIdx, setActiveSlideIdx] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [userKeys, setUserKeys] = useState({ gemini: '', openai: '' });
 
     const cardRef = useRef(null);
     const hiddenContainerRef = useRef(null);
@@ -45,6 +50,10 @@ export default function TodaysMenuPage() {
             }
         }
         init();
+        // Load keys from local storage
+        const savedGemini = localStorage.getItem('2days_gemini_key') || '';
+        const savedOpenAI = localStorage.getItem('2days_openai_key') || '';
+        setUserKeys({ gemini: savedGemini, openai: savedOpenAI });
     }, []);
 
     const activeReport = reports.find(r => r.id === activeReportId);
@@ -59,10 +68,17 @@ export default function TodaysMenuPage() {
             setActiveReportId(newReport.id);
             setActiveSlideIdx(0);
         } catch (err) {
-            setError("데이터 동기화에 실패했습니다. (API 할당량 초과 등)");
+            setError("데이터 동기화에 실패했습니다. (개인 API 키 확인 또는 할당량 초과)");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const saveSettings = () => {
+        localStorage.setItem('2days_gemini_key', userKeys.gemini);
+        localStorage.setItem('2days_openai_key', userKeys.openai);
+        setIsSettingsOpen(false);
+        alert('설정이 저장되었습니다. 다음 분석부터 적용됩니다.');
     };
 
     const handleDownloadAll = async () => {
@@ -209,6 +225,9 @@ export default function TodaysMenuPage() {
                     <div className={styles.title}><span className={styles.titleAccent}>2Days</span> 투데이즈</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <button onClick={() => setIsSettingsOpen(true)} className={styles.iconBtn} title="설정">
+                        <Settings size={20} />
+                    </button>
                     <button onClick={handleSync} className={styles.viewBtn} style={{ borderColor: '#0066ff', color: '#0066ff' }}>
                         <RefreshCcw size={14} style={{ marginRight: 6 }} /> 실시간 분석
                     </button>
@@ -294,6 +313,46 @@ export default function TodaysMenuPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Settings Modal */}
+            {isSettingsOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modal}>
+                        <div className={styles.modalHeader}>
+                            <h3><Key size={18} /> API 설정 (개인 키 관리)</h3>
+                            <button onClick={() => setIsSettingsOpen(false)}><X size={20} /></button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p className={styles.modalDesc}>본인의 API 키를 입력하면 서버 제한 없이 무제한으로 고성능 AI 분석을 이용할 수 있습니다. 키는 브라우저에만 안전하게 저장됩니다.</p>
+
+                            <div className={styles.inputGroup}>
+                                <label>Gemini API Key (무료/고속)</label>
+                                <input
+                                    type="password"
+                                    placeholder="AIzaSy..."
+                                    value={userKeys.gemini}
+                                    onChange={(e) => setUserKeys({ ...userKeys, gemini: e.target.value })}
+                                />
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">키 발급받기 ↗</a>
+                            </div>
+
+                            <div className={styles.inputGroup}>
+                                <label>OpenAI API Key (GPT-4o mini)</label>
+                                <input
+                                    type="password"
+                                    placeholder="sk-..."
+                                    value={userKeys.openai}
+                                    onChange={(e) => setUserKeys({ ...userKeys, openai: e.target.value })}
+                                />
+                                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">키 발급받기 ↗</a>
+                            </div>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button onClick={saveSettings} className={styles.saveBtn}>저장하기</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
