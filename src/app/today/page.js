@@ -22,6 +22,8 @@ import styles from './today.module.css';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { fetchDailyEconomyReport } from '@/lib/newsFetcher';
+import AdBanner from '@/components/AdBanner';
+import ProcessingModal from '@/components/ProcessingModal';
 
 export default function TodaysMenuPage() {
     const [reports, setReports] = useState([]);
@@ -187,10 +189,8 @@ export default function TodaysMenuPage() {
 
     if (isLoading) {
         return (
-            <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <RefreshCcw className="animate-spin text-blue-500" size={48} />
-                <p style={{ marginTop: 20, color: '#71717a', fontSize: '18px', fontWeight: 'bold' }}>AI가 오늘의 실시간 경제 정보를 분석 중입니다...</p>
-                <p style={{ marginTop: 8, color: '#a1a1aa' }}>잠시만 기다려 주세요 (약 10~20초 소요)</p>
+            <div className={styles.container}>
+                <ProcessingModal isOpen={true} message="AI가 오늘의 실시간 경제 뉴스를 엄선하고 있습니다..." />
             </div>
         );
     }
@@ -267,6 +267,10 @@ export default function TodaysMenuPage() {
                             </div>
                         ))}
                     </div>
+
+                    <div style={{ marginTop: 'auto', padding: '10px' }}>
+                        <AdBanner slot="8394888625" format="auto" />
+                    </div>
                 </aside>
 
                 <main className={styles.contentArea}>
@@ -300,6 +304,8 @@ export default function TodaysMenuPage() {
                             <Download size={18} /> 전체 이미지 저장 (Zip)
                         </button>
                     </div>
+
+                    <AdBanner slot="2995216079" />
                 </main>
             </div>
 

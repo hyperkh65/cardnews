@@ -17,6 +17,8 @@ import styles from './story.module.css';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { useRef } from 'react';
+import AdBanner from '@/components/AdBanner';
+import ProcessingModal from '@/components/ProcessingModal';
 
 // Mock Data Generator
 const MOCK_IMAGES = [
@@ -227,18 +229,13 @@ export default function StoryCreatorPage() {
                             아침 루틴 가이드
                         </button>
                     </div>
+
+                    <AdBanner slot="5158151469" />
                 </main>
             )}
 
             {step === 'processing' && (
-                <main className={styles.loadingSection}>
-                    <div className={styles.spinner}></div>
-                    <div className={styles.loadingText}>{loadingText}</div>
-                    <div style={{ width: 200, height: 4, background: '#1f1f2e', borderRadius: 2, overflow: 'hidden', marginTop: 12 }}>
-                        <div style={{ height: '100%', width: '60%', background: '#3b82f6', animation: 'progress 2s infinite ease-in-out' }}></div>
-                    </div>
-                    {/* Add keyframes for progress inline or in CSS. CSS is simpler but for now just visual. */}
-                </main>
+                <ProcessingModal isOpen={true} message={loadingText} />
             )}
 
             {step === 'result' && (
@@ -305,6 +302,10 @@ export default function StoryCreatorPage() {
                                     {style}
                                 </button>
                             ))}
+                        </div>
+
+                        <div style={{ marginTop: '30px' }}>
+                            <AdBanner slot="8394888625" format="auto" />
                         </div>
                     </aside>
                 </div>

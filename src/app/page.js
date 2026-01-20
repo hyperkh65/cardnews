@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import styles from './page.module.css';
 import { supabase } from '@/lib/supabase';
+import AdBanner from '@/components/AdBanner';
 
 export default function LandingPage() {
     const router = useRouter();
@@ -139,6 +140,9 @@ export default function LandingPage() {
                     내용만 입력하면 디자인은 자동으로!
                 </p>
 
+                {/* Ad Placement 1: Top Billboard */}
+                <AdBanner slot="4966757696" />
+
                 {/* Features Cards Grid */}
                 <div className={styles.grid}>
 
@@ -214,6 +218,9 @@ export default function LandingPage() {
                     </Link>
 
                 </div>
+
+                {/* Ad Placement 2: Mid-grid Ad */}
+                <AdBanner slot="3106703198" />
 
                 {/* Footer Features */}
                 <div className={styles.features}>

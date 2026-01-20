@@ -21,6 +21,8 @@ import {
 import styles from './maker.module.css';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
+import AdBanner from '@/components/AdBanner';
+import ProcessingModal from '@/components/ProcessingModal';
 
 // Default Card Data Structure
 const DEFAULT_SLIDES = [
@@ -91,6 +93,7 @@ export default function OneClickMakerPage() {
     const [activePage, setActivePage] = useState(0);
     const [slides, setSlides] = useState(DEFAULT_SLIDES);
     const [subject, setSubject] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Dragging State
     const [isDragging, setIsDragging] = useState(false);
@@ -179,8 +182,7 @@ export default function OneClickMakerPage() {
     const handleAIGenerate = async () => {
         if (!subject) return alert('주제를 입력해주세요!');
 
-        const btn = document.querySelector(`.${styles.aiButton}`);
-        if (btn) btn.innerText = '...';
+        setIsProcessing(true);
 
         try {
             const geminiKey = localStorage.getItem('2days_gemini_key') || "";
@@ -206,7 +208,7 @@ export default function OneClickMakerPage() {
             console.error(err);
             alert('AI 생성 중 오류가 발생했습니다. 할당량을 확인해주세요.');
         } finally {
-            if (btn) btn.innerText = 'AI';
+            setIsProcessing(false);
         }
     };
 
@@ -550,6 +552,10 @@ export default function OneClickMakerPage() {
                                 <ImageInputGroup />
                             </div>
                         ))}
+
+                        <div style={{ marginTop: '20px' }}>
+                            <AdBanner slot="3106703198" />
+                        </div>
                     </div>
                 </aside>
 
@@ -569,6 +575,9 @@ export default function OneClickMakerPage() {
                                     {activeTheme === key && (<div className={styles.themeChecked}><CheckCircle size={10} /></div>)}
                                 </div>
                             ))}
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <AdBanner slot="1637908585" />
                         </div>
                     </div>
 
@@ -593,6 +602,8 @@ export default function OneClickMakerPage() {
                     </div>
                 </div>
             </div>
+
+            <ProcessingModal isOpen={isProcessing} message="AI가 고품격 카드뉴스 대본을 작성하고 있습니다..." />
         </div>
     );
 }
