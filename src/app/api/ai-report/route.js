@@ -106,10 +106,13 @@ export async function GET(request) {
                     const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
                     const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
                     if (titleMatch) {
-                        allItems.push({
-                            title: titleMatch[1].replace(/<[^>]*>/g, '').trim(),
-                            description: (descMatch ? descMatch[1] : "").replace(/<[^>]*>/g, '').trim()
-                        });
+                        const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
+                        const description = (descMatch ? descMatch[1] : "").replace(/<[^>]*>/g, '').trim();
+
+                        // Filter out photo/table or very short/empty articles
+                        if (title.includes('[포토]') || title.includes('[표]') || description.includes('내용 생략')) continue;
+
+                        allItems.push({ title, description });
                     }
                 }
             } catch (e) { }
@@ -125,8 +128,9 @@ export async function GET(request) {
         let isAIFilled = false;
 
         const smartPrompt = `
-        다음 30개의 뉴스 제목 중에서 오늘 가장 중요하고 파급력이 큰 실시간 경제/산업/금융 뉴스 10개를 선정하고, 각각을 요약(summary)하고 통찰(insight)을 작성해줘.
-        선정 기준: 시장 영향력, 정책 변화, 대기업 동향 등 의미 있는 뉴스. 단순 사건사고 제외.
+        다음 ${allItems.length}개의 뉴스 제목 중에서 오늘 가장 중요하고 파급력이 큰 실시간 경제/산업/금융 뉴스 10개를 선정하고, 각각을 요약(summary)하고 통찰(insight)을 작성해줘.
+        선정 기준: 시장 영향력, 정책 변화, 대기업 동향 등 의미 있는 뉴스. 
+        절대 제외: 단순 사건사고, [포토], [표], [본문 내용 요약], 내용이 빈약한 단신 기사.
         
         데이터 형식: 반드시 아래 구조의 JSON 배열만 반환해.
         [{"originalIdx": 0, "title": "뉴스제목", "summary": "내용요약", "insight": "투자포인트/전망"}] 
