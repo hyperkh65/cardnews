@@ -69,13 +69,14 @@ export async function fetchDailyEconomyReport() {
     const dateLabel = now.toISOString().split('T')[0].split('-').join('.');
 
     const newsItems = feeds.slice(0, 10).map((item, idx) => {
-        // Clean and clamp description to ensure it fits in the card
+        // Clean and clamp description
         let cleanDesc = item.description
             .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ')
             .trim();
 
-        if (cleanDesc.length > 500) {
-            cleanDesc = cleanDesc.substring(0, 500) + '...';
+        if (cleanDesc.length > 180) {
+            cleanDesc = cleanDesc.substring(0, 180) + '...';
         }
 
         return {
@@ -86,16 +87,22 @@ export async function fetchDailyEconomyReport() {
         };
     });
 
-    // Split news into chunks of 1 item per slide for maximum readability and zero clipping
+    // Split news into chunks of 2 items per slide as requested
     const newsSlides = [];
-    for (let i = 0; i < newsItems.length; i += 1) {
+    for (let i = 0; i < newsItems.length; i += 2) {
         newsSlides.push({
             type: 'news',
-            items: newsItems.slice(i, i + 1)
+            items: newsItems.slice(i, i + 2)
         });
     }
 
     const slides = [
+        {
+            type: 'cover',
+            title: '투데이즈 경제 뉴스',
+            date: dateLabel,
+            subtitle: '오늘 꼭 알아야 할 주요 경제 지표와 핵심 뉴스'
+        },
         ...newsSlides,
         {
             type: 'market',

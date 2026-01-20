@@ -181,42 +181,85 @@
     color: white;
 }
 
-/* Card Rendering */
+/* Card Rendering (Instagram 4:5 optimized) */
 .cardContainer {
-    width: 480px;
-    aspect-ratio: 4/5;
-    background-color: white;
-    color: #111;
     position: relative;
+    width: 500px;
+    height: 625px;
+    /* 4:5 Ratio (1080 x 1350 scale) */
+    background-color: #0066ff;
+    /* Deep Vibrant Blue as requested */
+    color: white;
+    padding: 135px 50px;
+    /* Safe areas: Top/Bottom 135px for 1:1 view, Sides 50px */
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    padding: 40px;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
+    margin: 0 auto;
+    font-family: 'Pretendard', sans-serif;
 }
 
-.cardDate {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: #8b5cf6;
-    border-radius: 10px;
+/* White border dividers (as seen in HAENURI AD reference) */
+.cardContentWrapper {
+    position: relative;
+    flex: 1;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+    padding: 30px 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+}
+
+/* Cover Slide Styles */
+.coverBadge {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2.5px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    opacity: 0.95;
+    color: #ffffff;
+}
+
+.coverTitle {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 28px;
+    word-break: keep-all;
+    color: #ffffff;
+}
+
+.coverSubtitle {
+    font-size: 19px;
+    opacity: 0.85;
+    line-height: 1.65;
+    word-break: keep-all;
+    color: #ffffff;
+}
+
+/* Calendar Badge (Moved to top safe area) */
+.cardDate {
+    position: absolute;
+    top: 40px;
+    right: 50px;
+    padding: 10px 20px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: white;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
     z-index: 10;
 }
 
 .cardDateMonth {
-    font-size: 7px;
-    font-weight: 900;
+    font-size: 13px;
+    font-weight: 700;
     text-transform: uppercase;
-    margin-bottom: -2px;
 }
 
 .cardDateDay {
@@ -224,21 +267,23 @@
     font-weight: 900;
 }
 
+/* News Slide Styles */
 .newsItem {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     display: flex;
     flex-direction: column;
 }
 
+.newsItem:last-child {
+    margin-bottom: 0;
+}
+
 .newsTitle {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 900;
-    margin-bottom: 8px;
-    line-height: 1.3;
-    display: flex;
-    gap: 8px;
-    padding-right: 40px;
-    /* Avoid calendar overlap */
+    margin-bottom: 14px;
+    line-height: 1.35;
+    color: white;
     word-break: keep-all;
 }
 
@@ -249,92 +294,92 @@
 }
 
 .bulletItem {
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 6px;
-    padding-left: 14px;
-    position: relative;
+    font-size: 15px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 10px;
     word-break: keep-all;
-    overflow-wrap: break-word;
-}
-
-.bulletItem::before {
-    content: '•';
-    position: absolute;
-    left: 0;
-    color: #3b82f6;
 }
 
 .aiInsight {
-    color: #ef4444;
-    /* Reddish as in screenshot */
-    font-weight: 700;
+    display: inline-block;
+    color: #fbbf24;
+    /* Golden highlight for insight */
+    font-weight: 800;
+    font-size: 13px;
+    margin-top: 6px;
+    padding: 4px 0;
 }
 
-/* Index Page (Market) */
+/* Market Section */
 .marketSection {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    justify-content: center;
+}
+
+.marketTitle {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 35px;
+    text-align: center;
+    color: white;
 }
 
 .marketRow {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.checkIcon {
-    color: #ff4d4d;
-    font-weight: 900;
+.marketRow:last-child {
+    border-bottom: none;
 }
 
 .marketName {
-    font-size: 22px;
-    font-weight: 900;
-    flex: 1;
+    font-size: 19px;
+    font-weight: 700;
+    color: white;
 }
 
 .marketValue {
-    font-size: 22px;
+    font-size: 19px;
     font-weight: 900;
+    color: white;
 }
 
 .marketChange {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.ribbon {
-    position: absolute;
-    bottom: 40px;
-    right: 20px;
-    width: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    font-weight: 800;
+    font-size: 16px;
 }
 
 .downloadBar {
-    margin-top: 40px;
+    margin-top: 50px;
     display: flex;
     gap: 16px;
+    justify-content: center;
+    padding-bottom: 60px;
 }
 
 .actionBtn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: white;
-    font-weight: 700;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 50px;
+    background: #ffffff;
+    color: #0066ff;
+    font-weight: 800;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
 }
 
 .actionBtn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
