@@ -17,14 +17,15 @@ export async function GET(request) {
     if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
         return NextResponse.json(cachedReport);
     }
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const apiKey = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").trim();
 
     if (!apiKey) {
         return NextResponse.json({ error: 'AI API Key is missing on server' }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Updated to match the model in the User's dashboard to avoid 404
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     try {
         // 1. Fetch RSS from MK
@@ -45,40 +46,40 @@ export async function GET(request) {
             const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
             const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
 
-            const title = titleMatch ? titleMatch[1] : "기사 제목 없음";
-            const description = descMatch ? descMatch[1] : "내용 없음";
-
-            items.push({ title, description });
+            items.push({
+                title: titleMatch ? titleMatch[1] : "기사 제목 없음",
+                description: descMatch ? descMatch[1] : "내용 없음"
+            });
         }
 
-        if (items.length === 0) {
-            throw new Error('No news items found in RSS');
-        }
+        if (items.length === 0) throw new Error('No news items');
 
-        // 2. AI Bulk Summary Request with Timeout
+        // 2. AI Bulk Summary Request
         const bulkPrompt = `
         다음 경제 뉴스 ${items.length}건을 인스타그램 카드뉴스용으로 요약해줘.
         ${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description}]`).join('\n\n')}
 
-        조건:
-        1. 답변은 반드시 아래 형식의 JSON 배열(Array)만 출력할 것.
-        2. 형식: [{"summary": "한두문장 요약", "insight": "전문가 인사이트"}, ...]
-        3. 한글로 작성해라. 뉴스 순서대로 총 ${items.length}개를 작성해라.
+        질문이나 사족은 생략하고 오직 JSON 배열만 출력해라.
+        형식: [{"summary": "한두문장 요약", "insight": "전략적 인사이트"}, ...]
+        한국어로 작성해라. 뉴스 개수에 맞춰 정확히 ${items.length}개를 작성해라.
         `;
 
-        // Set a timeout for Gemini (30 seconds)
-        const aiPromise = model.generateContent(bulkPrompt);
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('AI Request Timeout')), 30000));
-
-        const result = await Promise.race([aiPromise, timeoutPromise]);
+        const result = await model.generateContent(bulkPrompt);
         const response = await result.response;
         const text = response.text();
+
+        // Sanitize response to find JSON
         const jsonMatch = text.match(/\[.*\]/s);
-        const aiResults = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+        if (!jsonMatch) throw new Error("AI returned invalid format");
+
+        const aiResults = JSON.parse(jsonMatch[0]);
 
         // 3. Structure Final Data with Fallbacks
         const newsItems = items.map((item, idx) => {
-            const aiData = aiResults[idx] || { summary: item.description.substring(0, 100).replace(/<[^>]*>/g, ''), insight: "시장 추이를 지속 파악할 필요가 있습니다." };
+            const aiData = aiResults[idx] || {
+                summary: item.description.substring(0, 100).replace(/<[^>]*>/g, ''),
+                insight: "시장 변동성을 예의주시하며 대응해야 합니다."
+            };
             return {
                 id: idx + 1,
                 title: item.title.replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim(),
