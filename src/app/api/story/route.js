@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
  * AI API for AI Story Creator
- * Fetches or imagines content from a URL and creates an Instagram Story script.
+ * Now with Enhanced Image Support: Parsing & AI Generation
  */
 export async function POST(request) {
     try {
@@ -22,21 +22,42 @@ export async function POST(request) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
+        // 1. Try to fetch the blog content & extract images
+        let blogImages = [];
+        let blogTitle = "";
+        try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'Mozilla/5.0' } });
+            const html = await res.text();
+
+            // Basic OG Image extraction
+            const ogMatch = html.match(/<meta property="og:image" content="(.*?)"/);
+            if (ogMatch) blogImages.push(ogMatch[1]);
+
+            const titleMatch = html.match(/<title>(.*?)<\/title>/);
+            if (titleMatch) blogTitle = titleMatch[1];
+
+            // Extract more images
+            const imgRegex = /<img.*?src="(.*?)"/g;
+            let match;
+            while ((match = imgRegex.exec(html)) !== null && blogImages.length < 5) {
+                if (match[1].startsWith('http')) blogImages.push(match[1]);
+            }
+        } catch (e) {
+            console.error("Scraping failed, falling back to AI imagination:", e.message);
+        }
+
         const prompt = `
-        다음 링크의 내용을 분석해서 인스타그램 카드뉴스(4장) 스타일의 스토리를 만들어줘.
+        다음 링크의 내용을 분석하거나, 제목을 바탕으로 인스타그램 카드뉴스(4장) 스타일의 스토리를 만들어줘.
         링크: "${url}"
+        참고된 제목: "${blogTitle}"
         
         데이터 형식: 반드시 아래 구조의 JSON 배열만 반환해.
-        총 4개의 객체를 가진 배열.
+        [{"type":"cover", "text":"...", "subText":"...", "imageKeyword": "영어 키워드", "dallePrompt": "DALL-E용 상세 영어 묘사"}]
+        (총 4개)
         
-        항목 상세:
-        - type: 'cover' (제목 장), 'content' (내용 장), 'outro' (마무리)
-        - text: 핵심이 되는 큰 제목
-        - subText: 보충 설명 또는 감성적인 캡션
-        - imageKeyword: 이 슬라이드에 어울리는 이미지 검색 키워드 (영어)
-
-        예시: [{"type":"cover", "text":"...", "subText":"...", "imageKeyword": "morning coffee"}, ...]
-        한국어로 작성하고, 인스타그램 특유의 감성적이고 친절한 어조를 사용해.
+        지침:
+        - 대한민국 감성에 맞는 친절하고 감성적인 어조.
+        - dallePrompt는 사진 같이 사실적이고 세련된 스타일로 작성.
         `;
 
         let textResult = "";
@@ -49,7 +70,8 @@ export async function POST(request) {
                 },
                 body: JSON.stringify({
                     model: "gpt-4o-mini",
-                    messages: [{ role: "user", content: prompt }]
+                    messages: [{ role: "user", content: prompt }],
+                    response_format: { type: "json_object" }
                 })
             });
             const data = await res.json();
@@ -62,19 +84,33 @@ export async function POST(request) {
         }
 
         const jsonMatch = textResult.match(/\[.*\]/s);
-        if (!jsonMatch) throw new Error("Invalid format");
+        if (!jsonMatch) throw new Error("Invalid AI content format");
         const slidesData = JSON.parse(jsonMatch[0]);
 
-        // Map to include Unsplash images based on keywords
-        const slides = slidesData.map((s, idx) => ({
-            id: idx + 1,
-            ...s,
-            bgImage: `https://source.unsplash.com/featured/?${s.imageKeyword.replace(/\s/g, ',')}`
-        }));
+        // 2. Resolve Images for each slide
+        const finalSlides = slidesData.map((s, idx) => {
+            let bgImage = "";
 
-        return NextResponse.json(slides);
+            // Strategy 1: Use specific blog images if found
+            if (blogImages.length > idx) {
+                bgImage = blogImages[idx];
+            }
+            // Strategy 2: Fallback to high quality keyword-based images
+            else {
+                // LoremFlickr is very reliable for keyword based images
+                bgImage = `https://loremflickr.com/1080/1350/${s.imageKeyword.replace(/\s/g, ',')}/all`;
+            }
+
+            return {
+                id: idx + 1,
+                ...s,
+                bgImage
+            };
+        });
+
+        return NextResponse.json(finalSlides);
     } catch (error) {
         console.error('Story AI Error:', error);
-        return NextResponse.json({ error: 'AI 분석 실패' }, { status: 500 });
+        return NextResponse.json({ error: 'AI 분석 실패: ' + error.message }, { status: 500 });
     }
 }

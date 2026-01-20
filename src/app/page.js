@@ -203,7 +203,7 @@ export default function LandingPage() {
                             <div className={styles.makerBadge} style={{ background: '#3b82f6', color: 'white' }}>NEW</div>
                             <div className={`${styles.cardIconBox}`} style={{ background: '#1e3a8a' }}><Globe size={24} color="white" /></div>
                             <h3 className={styles.cardTitle}>2Days Economy</h3>
-                            <p className={styles.cardDesc}>매일 8시 정기 업데이트<br />AI가 정제한 경제 뉴스 & 지수</p>
+                            <p className={styles.cardDesc}>매일 8시 정기 업데이트<br />AI가 직접 엄선한 경제 뉴스 & 지수</p>
                             <ul className={styles.cardList}>
                                 {['실시간 RSS 분석', '주요 지표 자동 요약', '정기 히스토리 보관'].map((item, i) => (
                                     <li key={i} className={styles.listItem}><div className={styles.checkIcon}><Check size={10} color="#3b82f6" /></div>{item}</li>

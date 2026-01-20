@@ -137,7 +137,7 @@ export default function TodaysMenuPage() {
                             <div className={styles.coverBadge}>TRIANGLE ECONOMY</div>
                             <h1 className={styles.newCoverTitle}>투데이즈<br /><span className={styles.titleDate}>{report.date.split('.').slice(1).join('.')}</span> 뉴스</h1>
                             <div className={styles.coverDivider}></div>
-                            <p className={styles.newCoverSubtitle}>AI가 실시간으로 분석한 오늘의 경제 브리핑</p>
+                            <p className={styles.newCoverSubtitle}>AI가 직접 엄선한 오늘의 경제 브리핑</p>
                             <div className={styles.coverWeb}>2days.kr</div>
                         </div>
                     )}

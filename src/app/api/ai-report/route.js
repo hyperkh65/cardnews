@@ -155,7 +155,7 @@ export async function GET(request) {
         }
 
         const buildSlides = (newsData, mInfo) => {
-            const slides = [{ type: 'cover', title: '투데이즈 경제 뉴스', subtitle: 'AI가 엄선한 오늘의 실시간 주요 경제 브리핑' }];
+            const slides = [{ type: 'cover', title: '투데이즈 경제 뉴스', subtitle: 'AI가 직접 엄선한 오늘의 주요 경제 브리핑' }];
             for (let i = 0; i < newsData.length; i += 2) {
                 slides.push({ type: 'news', title: '오늘의 주요 경제 기사', items: newsData.slice(i, i + 2) });
             }
