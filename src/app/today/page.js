@@ -220,15 +220,22 @@ export default function TodaysMenuPage() {
 
                 <main className={styles.contentArea}>
                     <div className={styles.viewControls}>
-                        {activeReport.slides.map((_, idx) => (
-                            <button
-                                key={idx}
-                                className={`${styles.viewBtn} ${activeSlideIdx === idx ? styles.viewBtnActive : ''}`}
-                                onClick={() => setActiveSlideIdx(idx)}
-                            >
-                                {idx === 0 ? '표지' : `P${idx}`}
-                            </button>
-                        ))}
+                        {activeReport.slides.map((slide, idx) => {
+                            let label = `P${idx}`;
+                            if (slide.type === 'cover') label = '표지';
+                            else if (slide.type === 'news') label = `뉴스 ${idx}`;
+                            else if (slide.type === 'market') label = '지표';
+
+                            return (
+                                <button
+                                    key={idx}
+                                    className={`${styles.viewBtn} ${activeSlideIdx === idx ? styles.viewBtnActive : ''}`}
+                                    onClick={() => setActiveSlideIdx(idx)}
+                                >
+                                    {label}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div className={styles.cardScaleWrapper}>
