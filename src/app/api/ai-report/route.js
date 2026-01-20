@@ -24,8 +24,14 @@ export async function GET(request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Updated to match the model in the User's dashboard to avoid 404
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Attempting 2.5-flash first, then 1.5-flash as fallback
+    let model;
+    try {
+        model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    } catch (e) {
+        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    }
 
     try {
         // 1. Fetch RSS from MK
@@ -64,8 +70,17 @@ export async function GET(request) {
         한국어로 작성해라. 뉴스 개수에 맞춰 정확히 ${items.length}개를 작성해라.
         `;
 
-        const result = await model.generateContent(bulkPrompt);
-        const response = await result.response;
+        let response;
+        try {
+            const result = await model.generateContent(bulkPrompt);
+            response = await result.response;
+        } catch (apiError) {
+            console.warn("AI content generation failed with current model, retrying with gemini-1.5-flash...", apiError.message);
+            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const result = await fallbackModel.generateContent(bulkPrompt);
+            response = await result.response;
+        }
+
         const text = response.text();
 
         // Sanitize response to find JSON
@@ -105,7 +120,10 @@ export async function GET(request) {
         return NextResponse.json(reportData);
 
     } catch (error) {
-        console.error('AI Report API Error:', error);
-        return NextResponse.json({ error: 'Failed to generate AI report' }, { status: 500 });
+        console.error('AI Report API Error:', error.message);
+        return NextResponse.json({
+            error: error.message || 'AI 분석 중 오류가 발생했습니다.',
+            details: error.stack
+        }, { status: 500 });
     }
 }
