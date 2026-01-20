@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
 // Server-side Supabase client with Service Role Key
@@ -26,19 +28,25 @@ export async function GET(request) {
         for (let i = 0; i < keyPool.length; i++) {
             const currentKey = keyPool[i];
             const genAI = new GoogleGenerativeAI(currentKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            try {
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const text = response.text();
-                const jsonMatch = text.match(/\[.*\]/s);
-                if (!jsonMatch) throw new Error("Format Error");
-                return JSON.parse(jsonMatch[0]);
-            } catch (err) {
-                if ((err.message?.includes('429') || err.message?.includes('503')) && i < keyPool.length - 1) continue;
-                throw err;
+            // Try 1.5 first, then 2.0 if needed
+            const modelNames = ["gemini-1.5-flash", "gemini-2.0-flash-exp"];
+
+            for (const mName of modelNames) {
+                try {
+                    console.log(`Trying Key #${i + 1} with ${mName}...`);
+                    const model = genAI.getGenerativeModel({ model: mName });
+                    const result = await model.generateContent(prompt);
+                    const response = await result.response;
+                    const text = response.text();
+                    const jsonMatch = text.match(/\[.*\]/s);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                } catch (err) {
+                    console.error(`Key #${i + 1} ${mName} failed:`, err.message);
+                    continue;
+                }
             }
         }
+        throw new Error("All AI Rotation failed");
     }
 
     try {
@@ -56,8 +64,8 @@ export async function GET(request) {
             const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
             const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
             items.push({
-                title: titleMatch ? titleMatch[1] : "기사 제목 없음",
-                description: (descMatch ? descMatch[1] : "내용 없음").replace(/<[^>]*>/g, '').trim()
+                title: titleMatch ? titleMatch[1] : "경제 뉴스",
+                description: (descMatch ? descMatch[1] : "상세 내용은 클릭하여 확인하세요.").replace(/<[^>]*>/g, '').trim()
             });
         }
 
@@ -69,22 +77,28 @@ export async function GET(request) {
         }
 
         // 4. Try AI Analysis
-        const bulkPrompt = `경제 뉴스 ${items.length}건을 요약해줘.\n${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description.substring(0, 300)}]`).join('\n\n')}\n오직 JSON 배열 반환. 형식: [{"summary": "한두문장 요약", "insight": "전문 인사이트"}, ...]`;
+        const bulkPrompt = `경제 뉴스 ${items.length}건 요약 및 인사이트 생성.\n${items.map((n, i) => `뉴스 ${i + 1}: ${n.title} - ${n.description.substring(0, 200)}`).join('\n')}\nJSON 배열만 반환: [{"summary": "요약", "insight": "뉴스통찰"}]`;
 
         let aiResults;
         try {
             aiResults = await analyzeWithRotation(bulkPrompt);
         } catch (aiError) {
-            console.error("AI Service exhausted, trying to fetch from DB...");
+            console.error("AI failed, trying DB fallback...");
             const { data: dbReport } = await supabaseAdmin
                 .from('news_reports')
                 .select('*')
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (dbReport) return NextResponse.json(dbReport.content);
-            throw new Error('AI 분석 한도 초과 및 저장된 데이터 없음');
+
+            // Final Emergency: Fake AI from RSS text
+            console.log("Everything failed, using RSS-based fallback report.");
+            aiResults = items.map(item => ({
+                summary: item.description.length > 80 ? item.description.substring(0, 80) + "..." : item.description,
+                insight: "주요 경제 지표와 뉴스의 연관성을 예의주시할 필요가 있습니다."
+            }));
         }
 
         // 5. Structure Final Data
@@ -92,7 +106,7 @@ export async function GET(request) {
             id: idx + 1,
             title: item.title.replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim(),
             bullets: [aiResults[idx]?.summary || item.description.substring(0, 80)],
-            insight: aiResults[idx]?.insight || "시장 지표 데이터 분석 지연 중"
+            insight: aiResults[idx]?.insight || "지표 데이터 연동 중"
         }));
 
         const newsSlides = [];
