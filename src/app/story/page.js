@@ -70,67 +70,37 @@ export default function StoryCreatorPage() {
         }
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!url) return alert('블로그 또는 기사 링크를 입력해주세요.');
 
         setStep('processing');
 
-        // Simulate AI Steps
-        const sequence = [
-            { t: '블로그 콘텐츠 분석 중...', d: 1500 },
-            { t: '핵심 이미지 추출 중...', d: 1500 },
-            { t: '인스타 감성 캡션 생성 중...', d: 1500 },
-            { t: '디자인 적용 중...', d: 1000 },
-        ];
+        try {
+            // Start real-time AI processing
+            setLoadingText('블로그 콘텐츠 분석 중...');
 
-        let delaySum = 0;
-        sequence.forEach(({ t, d }, idx) => {
+            const res = await fetch('/api/story', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            if (!res.ok) throw new Error('AI 분석 실패');
+
+            setLoadingText('디자인 및 캡션 최적화 중...');
+            const aiSlides = await res.json();
+
+            // Artificial delay for smooth UX transition
             setTimeout(() => {
-                setLoadingText(t);
-                if (idx === sequence.length - 1) {
-                    setTimeout(finishGeneration, d);
-                }
-            }, delaySum);
-            delaySum += d;
-        });
-    };
+                setSlides(aiSlides);
+                setStep('result');
+            }, 1000);
 
-    const finishGeneration = () => {
-        // Mock Result Generation based on URL input (conceptually)
-        // We will generate 4 slides
-        const generatedSlides = [
-            {
-                id: 1,
-                bgImage: MOCK_IMAGES[0],
-                text: "성공하는 사람들의\n7가지 아침 습관",
-                subText: "하루를 바꾸는 기적의 루틴",
-                type: 'cover' // Title style
-            },
-            {
-                id: 2,
-                bgImage: MOCK_IMAGES[1],
-                text: "1. 기상 직후 물 한 잔",
-                subText: "밤새 소실된 수분을 보충하고\n신진대사를 깨우는 가장 쉬운 방법입니다.",
-                type: 'content'
-            },
-            {
-                id: 3,
-                bgImage: MOCK_IMAGES[2],
-                text: "2. 명상으로 뇌 깨우기",
-                subText: "단 5분의 명상이\n하루의 집중력을 결정합니다.",
-                type: 'content'
-            },
-            {
-                id: 4,
-                bgImage: MOCK_IMAGES[3],
-                text: "더 많은 꿀팁이 궁금하다면?",
-                subText: "프로필 링크를 확인해주세요!",
-                type: 'outro'
-            }
-        ];
-
-        setSlides(generatedSlides);
-        setStep('result');
+        } catch (err) {
+            console.error(err);
+            alert('AI 분석 중 오류가 발생했습니다. 할당량을 확인해주세요.');
+            setStep('input');
+        }
     };
 
     return (

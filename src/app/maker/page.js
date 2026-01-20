@@ -175,19 +175,32 @@ export default function OneClickMakerPage() {
     }, [isDragging]);
 
 
-    // Mock AI Generation (Update to reset mock images/pos)
-    const handleAIGenerate = () => {
+    // Real AI Generation
+    const handleAIGenerate = async () => {
         if (!subject) return alert('주제를 입력해주세요!');
-        const newSlides = [
-            { id: 0, type: 'cover', title: `${subject} 완벽 가이드`, subtitle: '초보자도 쉽게 따라하는 꿀팁', bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-            { id: 1, type: 'intro', text: `${subject}, 어렵게만 생각하셨나요? 핵심만 짚어드립니다.`, bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-            { id: 2, type: 'point', title: '첫 번째 핵심', text: '가장 중요한 것은 꾸준함입니다.', bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-            { id: 3, type: 'point', title: '두 번째 비밀', text: '도구를 100% 활용하세요.', bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-            { id: 4, type: 'point', title: '주의할 점', text: '무리하지 말고 천천히 시작하세요.', bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-            { id: 5, type: 'outro', title: '마무리', subtitle: '지금 바로 시작해보세요!', text: '당신의 성공을 응원합니다.', bgImage: null, overlayImage: null, textPos: { x: 0, y: 0 } },
-        ];
-        setSlides(newSlides);
-        alert('AI가 내용을 생성했습니다!');
+
+        const btn = document.querySelector(`.${styles.aiButton}`);
+        if (btn) btn.innerText = '...';
+
+        try {
+            const res = await fetch('/api/maker', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject })
+            });
+
+            if (!res.ok) throw new Error('AI 요청 실패');
+            const newSlides = await res.json();
+
+            setSlides(newSlides);
+            setActivePage(0);
+            alert('AI가 전문적인 카드뉴스를 생성했습니다!');
+        } catch (err) {
+            console.error(err);
+            alert('AI 생성 중 오류가 발생했습니다. 할당량을 확인해주세요.');
+        } finally {
+            if (btn) btn.innerText = 'AI';
+        }
     };
 
     // State and Refs setup done above
