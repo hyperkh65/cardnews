@@ -49,46 +49,87 @@ export async function GET(request) {
     }
 
     async function fetchRealMarketData() {
-        const symbols = {
-            'KOSPI': '^KS11', 'KOSDAQ': '^KQ11', 'S&P 500': '^GSPC', 'NASDAQ': '^IXIC',
-            'GOLD': 'GC=F', 'SILVER': 'SI=F', 'COPPER': 'HG=F', 'ALUMINUM': 'ALI=F',
-            'BTC': 'BTC-USD', 'ETH': 'ETH-USD', 'SOL': 'SOL-USD', 'XRP': 'XRP-USD'
-        };
-        const marketData = { exchange: [], global: [], crypto: [], commodities: [] };
-        try {
-            const results = await Promise.all(Object.entries(symbols).map(async ([name, sym]) => {
-                try {
-                    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`, {
-                        signal: AbortSignal.timeout(5000),
-                        headers: { 'User-Agent': 'Mozilla/5.0' }
-                    });
-                    const data = await res.json();
-                    const meta = data.chart.result[0].meta;
-                    const price = meta.regularMarketPrice;
-                    const prevClose = meta.previousClose;
-                    const changeVal = price - prevClose;
-                    const changePct = ((changeVal / prevClose) * 100).toFixed(2);
+        const marketData = { exchange: [], global: [], crypto: [], commodities: [], updatedAt: new Date().toLocaleTimeString('ko-KR') };
+
+        async function getNaverIndex(code) {
+            try {
+                const res = await fetch(`https://m.stock.naver.com/api/index/${code}/basic`, {
+                    headers: { 'User-Agent': 'Mozilla/5.0' },
+                    signal: AbortSignal.timeout(5000)
+                });
+                const data = await res.json();
+                return {
+                    name: code === 'KOSPI' ? '코스피' : '코스닥',
+                    value: data.closePrice,
+                    change: `${data.compareToPreviousPrice.code === '2' || data.compareToPreviousPrice.code === '3' ? '+' : ''}${data.fluctuationsRatio}%`,
+                    status: (data.compareToPreviousPrice.code === '2' || data.compareToPreviousPrice.code === '3') ? 'up' : 'down'
+                };
+            } catch (e) { return null; }
+        }
+
+        async function getNaverExchange() {
+            try {
+                const res = await fetch('https://finance.naver.com/marketindex/', {
+                    headers: { 'User-Agent': 'Mozilla/5.0' },
+                    signal: AbortSignal.timeout(5000)
+                });
+                const html = await res.text();
+                const match = html.match(/USD\/KRW[\s\S]*?class="value">([\d,.]+)</);
+                const changeMatch = html.match(/USD\/KRW[\s\S]*?class="change">([\d,.]+)</);
+                const statusMatch = html.match(/USD\/KRW[\s\S]*?class="blind"> (.*?) /);
+                if (match) {
                     return {
-                        name,
-                        value: price >= 1000 ? Math.floor(price).toLocaleString() : price.toFixed(2),
-                        change: `${changeVal > 0 ? '+' : ''}${changePct}%`,
-                        status: changeVal >= 0 ? 'up' : 'down'
+                        name: '환율 (USD/KRW)',
+                        value: match[1],
+                        change: (statusMatch?.[1].includes('상승') ? '+' : '-') + (changeMatch?.[1] || '0.00'),
+                        status: statusMatch?.[1].includes('상승') ? 'up' : 'down'
                     };
-                } catch (e) { return null; }
-            }));
-            results.filter(r => r).forEach(r => {
-                if (['KOSPI', 'KOSDAQ'].includes(r.name)) marketData.exchange.push(r);
-                else if (['S&P 500', 'NASDAQ'].includes(r.name)) marketData.global.push(r);
-                else if (['GOLD', 'SILVER', 'COPPER', 'ALUMINUM'].includes(r.name)) marketData.commodities.push(r);
-                else marketData.crypto.push(r);
-            });
-            const nameMap = {
-                'KOSPI': '코스피', 'KOSDAQ': '코스닥',
-                'GOLD': '금 (Gold)', 'SILVER': '은 (Silver)',
-                'COPPER': '구리 (Copper)', 'ALUMINUM': '알루미늄',
-                'BTC': '비트코인', 'ETH': '이더리움', 'SOL': '솔라나', 'XRP': '리플'
-            };
-            Object.values(marketData).forEach(list => list.forEach(item => { if (nameMap[item.name]) item.name = nameMap[item.name]; }));
+                }
+            } catch (e) { return null; }
+            return null;
+        }
+
+        async function getYahooData(name, sym) {
+            try {
+                const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1d`, {
+                    headers: { 'User-Agent': 'Mozilla/5.0' },
+                    signal: AbortSignal.timeout(5000)
+                });
+                const data = await res.json();
+                const meta = data.chart.result[0].meta;
+                const price = meta.regularMarketPrice;
+                const prevClose = meta.previousClose;
+                const changeVal = price - prevClose;
+                const changePct = ((changeVal / prevClose) * 100).toFixed(2);
+                let displayValue = price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (['비트코인', '이더리움'].includes(name)) displayValue = Math.floor(price).toLocaleString();
+                return {
+                    name,
+                    value: displayValue,
+                    change: `${changeVal > 0 ? '+' : ''}${changePct}%`,
+                    status: changeVal >= 0 ? 'up' : 'down'
+                };
+            } catch (e) { return null; }
+        }
+
+        try {
+            const [kospi, kosdaq, usd, snp, nasdaq, gold, silver, copper, aluminum, btc, eth] = await Promise.all([
+                getNaverIndex('KOSPI'),
+                getNaverIndex('KOSDAQ'),
+                getNaverExchange(),
+                getYahooData('S&P 500', '^GSPC'),
+                getYahooData('NASDAQ', '^IXIC'),
+                getYahooData('금 (Gold)', 'GC=F'),
+                getYahooData('은 (Silver)', 'SI=F'),
+                getYahooData('구리 (Copper)', 'HG=F'),
+                getYahooData('알루미늄', 'ALI=F'),
+                getYahooData('비트코인', 'BTC-USD'),
+                getYahooData('이더리움', 'ETH-USD')
+            ]);
+            marketData.exchange = [kospi, kosdaq, usd].filter(Boolean);
+            marketData.global = [snp, nasdaq].filter(Boolean);
+            marketData.commodities = [gold, silver, copper, aluminum].filter(Boolean);
+            marketData.crypto = [btc, eth].filter(Boolean);
             return marketData;
         } catch (err) { return null; }
     }
