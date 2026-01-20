@@ -250,9 +250,10 @@
 }
 
 .aiInsight::before {
-    content: "AI ANALYSIS";
+    content: "AI INSIGHT";
     margin-right: 8px;
-    color: #fbbf24;
+    color: #60a5fa;
+    /* Cleaner Light Blue instead of Yellow */
     font-weight: 900;
 }
 

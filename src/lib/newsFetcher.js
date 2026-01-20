@@ -76,47 +76,39 @@ export async function fetchDailyEconomyReport() {
     // Limit to top 6 news for better AI performance and card layout (3 pages total)
     const rawNews = feeds.slice(0, 6);
 
-    const newsItems = await Promise.all(rawNews.map(async (item, idx) => {
-        try {
-            const prompt = `
-            다음 경제 뉴스 기사를 인스타그램 카드뉴스용으로 요약해줘.
-            제목: ${item.title}
-            내용: ${item.description}
+    // Generate a bulk prompt for all news items to save API quota (RPM) and ensure consistency
+    const bulkPrompt = `
+    다음은 오늘자 경제 뉴스 6건의 리스트다. 각 뉴스별로 인스타그램 카드뉴스에 들어갈 '짧은 요약(50자 내외)'과 '금융 인사이트(1문장)'를 작성해라.
 
-            조건:
-            1. 핵심 내용을 1~2문장의 아주 짧은 요약문으로 작성할 것. (50자 내외)
-            2. 이 기사가 시장에 주는 시사점이나 전문가적 인사이트를 1문장으로 작성할 것. (예: "금리 인상 속도 조절의 신호탄으로 보입니다.")
-            3. 불필요한 수식어는 빼고 담백하게 작성할 것.
-            
-            추천 형식(JSON): 
-            { "summary": "요약내용", "insight": "인사이트" }
-            한글로 답변해줘.
-            `;
+    ${rawNews.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description}]`).join('\n\n')}
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+    조건:
+    1. 답변은 반드시 아래 형식의 JSON 배열(Array)만 출력할 것. 다른 말은 하지 마라.
+    2. 형식: [{"summary": "...", "insight": "..."}, ...] (뉴스 순서대로 6개 항목)
+    3. 요약은 담백한 정보 전달 위주로, 인사이트는 전문가가 분석한 듯한 느낌으로 작성해라.
+    4. 한글로 답변해라.
+    `;
 
-            // Extract JSON from response (handling potential markdown)
-            const jsonMatch = text.match(/\{.*\}/s);
-            const aiData = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: item.description.substring(0, 100), insight: "시장 상황을 예의주시해야 합니다." };
+    let aiResults = [];
+    try {
+        const result = await model.generateContent(bulkPrompt);
+        const response = await result.response;
+        const text = response.text();
+        const jsonMatch = text.match(/\[.*\]/s);
+        aiResults = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch (e) {
+        console.error("AI Bulk Analysis failed:", e);
+    }
 
-            return {
-                id: idx + 1,
-                title: item.title.replace(/\[.*?\]/g, '').trim(),
-                bullets: [aiData.summary],
-                insight: aiData.insight
-            };
-        } catch (e) {
-            console.error("AI Analysis failed:", e);
-            return {
-                id: idx + 1,
-                title: item.title,
-                bullets: [item.description.substring(0, 100) + "..."],
-                insight: "실시간 분석 중 오류가 발생했습니다."
-            };
-        }
-    }));
+    const newsItems = rawNews.map((item, idx) => {
+        const aiData = aiResults[idx] || { summary: item.description.substring(0, 100), insight: "시장 상황을 예의주시해야 합니다." };
+        return {
+            id: idx + 1,
+            title: item.title.replace(/\[.*?\]/g, '').trim(),
+            bullets: [aiData.summary],
+            insight: aiData.insight
+        };
+    });
 
     // Split news into chunks of 2 items per slide
     const newsSlides = [];
