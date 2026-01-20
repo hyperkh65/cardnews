@@ -13,27 +13,38 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
-    const apiKey = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").trim();
+    // 1. API Key Pool for Rotation (Load Balancing)
+    const rawKeys = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+    const keyPool = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
 
-    if (!apiKey) {
+    if (keyPool.length === 0) {
         return NextResponse.json({ error: 'AI API Key is missing on server' }, { status: 500 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Function to try analysis with rotation
+    async function analyzeWithRotation(prompt) {
+        // Try each key in the pool if one hits a limit
+        for (let i = 0; i < keyPool.length; i++) {
+            const currentKey = keyPool[i];
+            const genAI = new GoogleGenerativeAI(currentKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Function to generate content with automatic retries for Rate Limits
-    async function generateWithRetry(modelRef, prompt, retries = 2) {
-        for (let i = 0; i <= retries; i++) {
             try {
-                const result = await modelRef.generateContent(prompt);
-                return await result.response;
+                console.log(`Attempting analysis with Key #${i + 1}...`);
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
+                const jsonMatch = text.match(/\[.*\]/s);
+                if (!jsonMatch) throw new Error("Format Error");
+                return JSON.parse(jsonMatch[0]);
             } catch (err) {
-                if (err.message?.includes('429') && i < retries) {
-                    console.log(`Rate limit hit, retrying in ${2 * (i + 1)}s...`);
-                    await new Promise(res => setTimeout(res, 2000 * (i + 1)));
+                const isRateLimit = err.message?.includes('429') || err.message?.includes('503');
+                if (isRateLimit && i < keyPool.length - 1) {
+                    console.warn(`Key #${i + 1} limited, rotating to next key...`);
+                    // Immediate rotation without waiting
                     continue;
                 }
-                throw err;
+                throw err; // Out of keys or critical error
             }
         }
     }
@@ -76,7 +87,7 @@ export async function GET(request) {
 
         if (items.length === 0) throw new Error('No news items');
 
-        // 2. AI Request with Retry
+        // 2. AI Request with Rotation
         const bulkPrompt = `
         경제 뉴스 ${items.length}건을 인스타그램 카드뉴스용으로 요약해줘.
         ${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description.substring(0, 300)}]`).join('\n\n')}
@@ -88,16 +99,10 @@ export async function GET(request) {
 
         let aiResults = [];
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const response = await generateWithRetry(model, bulkPrompt);
-            const text = response.text();
-            const jsonMatch = text.match(/\[.*\]/s);
-            if (jsonMatch) aiResults = JSON.parse(jsonMatch[0]);
+            aiResults = await analyzeWithRotation(bulkPrompt);
         } catch (apiError) {
-            console.error("AI failed after retries:", apiError.message);
-            // Throw error to UI so user knows it's a quota issue. 
-            // The UI will handle this and show the "try again later" message.
-            throw new Error('AI 분석 한도가 초과되었습니다. 잠시 후 다시 시도해 주세요.');
+            console.error("AI Rotation failed:", apiError.message);
+            throw new Error('전체 AI 서비스 한도가 초과되었습니다. 잠시 후 다시 시도해 주세요.');
         }
 
         // 3. Structure Final Data
