@@ -1,0 +1,334 @@
+/* src/app/today/today.module.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #05050a;
+    color: white;
+    overflow: hidden;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.header {
+    height: 64px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #0a0a14;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    z-index: 50;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.backButton {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.backButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.5px;
+}
+
+.titleAccent {
+    color: #3b82f6;
+}
+
+.main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar: History List */
+.sidebar {
+    width: 300px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #0a0a14;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebarHeader {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebarTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e4e4e7;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.historyList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.historyItem {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.historyItem:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.historyItemActive {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.historyDate {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f4f4f5;
+    margin-bottom: 4px;
+}
+
+.historyTime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #71717a;
+}
+
+.timeBadge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #27272a;
+    color: #a1a1aa;
+    font-weight: 600;
+}
+
+.historyItemActive .timeBadge {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Content Area */
+.contentArea {
+    flex: 1;
+    background-color: #05050a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    overflow-y: auto;
+    position: relative;
+    background-image:
+        radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+}
+
+.viewControls {
+    margin-bottom: 32px;
+    display: flex;
+    gap: 12px;
+}
+
+.viewBtn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: #a1a1aa;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.viewBtnActive {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+/* Card Rendering */
+.cardContainer {
+    width: 480px;
+    aspect-ratio: 4/5;
+    background-color: white;
+    color: #111;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.cardDate {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background-color: #8b5cf6;
+    /* Same as the violet in screenshot */
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+}
+
+.cardDateMonth {
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.cardDateDay {
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.newsItem {
+    margin-bottom: 30px;
+}
+
+.newsTitle {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    line-height: 1.2;
+    display: flex;
+    gap: 8px;
+}
+
+.bulletList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bulletItem {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 6px;
+    padding-left: 14px;
+    position: relative;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+.bulletItem::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+}
+
+.aiInsight {
+    color: #ef4444;
+    /* Reddish as in screenshot */
+    font-weight: 700;
+}
+
+/* Index Page (Market) */
+.marketSection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.marketRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.checkIcon {
+    color: #ff4d4d;
+    font-weight: 900;
+}
+
+.marketName {
+    font-size: 22px;
+    font-weight: 900;
+    flex: 1;
+}
+
+.marketValue {
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.marketChange {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ribbon {
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.downloadBar {
+    margin-top: 40px;
+    display: flex;
+    gap: 16px;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.actionBtn:hover {
+    transform: translateY(-2px);
+}

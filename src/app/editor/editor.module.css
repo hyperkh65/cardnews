@@ -1,0 +1,445 @@
+/* ... Previous styles ... */
+/* Inherit base vars */
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #05050a;
+    color: white;
+    overflow: hidden;
+    font-family: 'Pretendard', sans-serif;
+    user-select: none;
+    /* Prevent selection while dragging */
+}
+
+/* Header */
+.header {
+    height: 64px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #0a0a14;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    z-index: 50;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.backButton {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.backButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.titleIcon {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ratioToggle {
+    display: flex;
+    background-color: #1f1f2e;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.ratioButton {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #71717a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.ratioButtonActive {
+    background-color: #3f3f50;
+    color: white;
+}
+
+.downloadButton {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.downloadButton:hover {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Layout */
+.main {
+    display: flex;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+}
+
+/* --- Left Sidebar: Assets & Layers --- */
+.leftPanel {
+    width: 360px;
+    /* Widened for assets */
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #0a0a14;
+    display: flex;
+    flex-shrink: 0;
+}
+
+/* Sidebar Tabs (Rail) */
+.tabRail {
+    width: 64px;
+    height: 100%;
+    background-color: #05050a;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 16px;
+    gap: 16px;
+}
+
+.tabButton {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #71717a;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tabButton:hover {
+    background-color: #1e1e2e;
+    color: #e4e4e7;
+}
+
+.tabButtonActive {
+    background-color: #2e2e48;
+    color: #3b82f6;
+}
+
+.tabLabel {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Sidebar Content Drawer */
+.drawer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.drawerHeader {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.drawerContent {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+/* Grid for Shapes/Stickes */
+.assetGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.assetItem {
+    aspect-ratio: 1;
+    background-color: #1e1e2e;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    color: #e4e4e7;
+}
+
+.assetItem:hover {
+    background-color: #2e2e48;
+    border-color: #3b82f6;
+    transform: scale(1.05);
+}
+
+/* Layer List Items */
+.layerItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: #16162a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border 0.2s;
+}
+
+.layerItem:hover {
+    border-color: #52525b;
+}
+
+.layerItemActive {
+    border-color: #3b82f6;
+    background-color: #1e1e38;
+}
+
+/* --- Middle: Canvas --- */
+.canvasArea {
+    flex: 1;
+    background-color: #101014;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    position: relative;
+    background-image:
+        linear-gradient(45deg, #16161a 25%, transparent 25%),
+        linear-gradient(-45deg, #16161a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #16161a 75%),
+        linear-gradient(-45deg, transparent 75%, #16161a 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.canvasWrapper {
+    width: 480px;
+    aspect-ratio: 4/5;
+    background-color: white;
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+/* --- Right Sidebar: Properties --- */
+.rightPanel {
+    width: 300px;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #0a0a14;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.panelTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e4e4e7;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panelSection {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.propRow {
+    margin-bottom: 16px;
+}
+
+.propLabel {
+    display: block;
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* Inputs */
+.inputGroup {
+    display: flex;
+    gap: 8px;
+}
+
+.propInput {
+    background-color: #1e1e2e;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    color: white;
+    padding: 8px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+}
+
+.propInput:focus {
+    border-color: #3b82f6;
+}
+
+/* Slider */
+.sliderContainer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rangeInput {
+    flex: 1;
+    height: 4px;
+    background: #27272a;
+    border-radius: 2px;
+    appearance: none;
+    outline: none;
+}
+
+.rangeInput::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #0a0a14;
+}
+
+/* Color Picker */
+.colorPreview {
+    width: 100%;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    position: relative;
+}
+
+/* Action Buttons */
+.deleteButton {
+    width: 100%;
+    padding: 10px;
+    background-color: #271212;
+    border: 1px solid #451a1a;
+    color: #f87171;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.deleteButton:hover {
+    background-color: #451a1a;
+}
+
+/* Upload Box */
+.uploadBox {
+    border: 1px dashed #3f3f46;
+    background-color: #121216;
+    border-radius: 8px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #71717a;
+    font-size: 12px;
+    cursor: pointer;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.uploadBox:hover {
+    border-color: #3b82f6;
+    background-color: #1e1e2e;
+    color: #3b82f6;
+}
+
+/* Alignment Grid for Text */
+.alignGrid {
+    display: flex;
+    background-color: #1e1e2e;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.alignBtn {
+    flex: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #a1a1aa;
+}
+
+.alignBtnActive {
+    background-color: #3f3f46;
+    color: white;
+}

@@ -1,0 +1,315 @@
+/* src/app/story/story.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-darker);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    height: var(--header-height);
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: var(--bg-primary);
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.backButton {
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.backButton:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.titleIcon {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Main Content */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Input Section (Initial State) */
+.inputSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    gap: 32px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.heroTitle {
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    background: linear-gradient(to right, #ffffff, #a1a1aa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+.heroDesc {
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 16px;
+    max-width: 480px;
+    line-height: 1.6;
+}
+
+.urlInputBox {
+    width: 100%;
+    max-width: 600px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 16px;
+    padding: 8px;
+    display: flex;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.urlInputBox:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.urlInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    color: white;
+    outline: none;
+}
+
+.generateButton {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    border: none;
+    padding: 0 32px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.generateButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.generateButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Loading State */
+.loadingSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex: 1;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loadingText {
+    font-size: 18px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Results View */
+.resultContainer {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.previewArea {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    position: relative;
+    padding: 40px;
+    overflow: hidden;
+}
+
+/* Carousel */
+.carousel {
+    display: flex;
+    gap: 32px;
+    padding: 40px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    max-width: 100%;
+    align-items: center;
+}
+
+.cardWrapper {
+    flex-shrink: 0;
+    width: 320px;
+    aspect-ratio: 4/5;
+    position: relative;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s;
+    background: #111;
+}
+
+.cardWrapper:hover {
+    transform: translateY(-8px);
+    z-index: 10;
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6);
+}
+
+.cardOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.cardContent {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    /* Insta style text at bottom usually, or center */
+    color: white;
+    text-align: left;
+}
+
+/* Editable area trigger */
+.editTrigger {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cardWrapper:hover .editTrigger {
+    opacity: 1;
+}
+
+/* Sidebar for Story Mode */
+.storySidebar {
+    width: 320px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border-primary);
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.stepTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.generatedSummary {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 24px;
+    border: 1px solid var(--border-primary);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
