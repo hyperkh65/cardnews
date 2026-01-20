@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Triangle, Mail, Lock, Github } from 'lucide-react';
-import styles from '../signup/signup.module.css'; // 공유 스타일 사용
+import { useRouter } from 'next/navigation';
+import { Triangle, Mail, Lock, Github, Loader2 } from 'lucide-react';
+import styles from '../signup/signup.module.css';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: ''

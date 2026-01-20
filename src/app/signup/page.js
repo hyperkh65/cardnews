@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Triangle, Mail, Lock, User, ArrowRight, Github } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Triangle, Mail, Lock, User, ArrowRight, Github, Loader2 } from 'lucide-react';
 import styles from './signup.module.css';
+import { supabase } from '@/lib/supabase';
 
 export default function SignupPage() {
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
