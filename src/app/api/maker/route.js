@@ -7,7 +7,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  */
 export async function POST(request) {
     try {
-        const { subject } = await request.json();
+        const { subject, isCaptionRequest } = await request.json();
 
         // Support Custom Keys
         const userGeminiKey = request.headers.get('x-gemini-key');
@@ -22,22 +22,27 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Subject is required' }, { status: 400 });
         }
 
-        const prompt = `
-        주제: "${subject}"
-        이 주제로 인스타그램 카드뉴스 6장 분량의 가독성 좋은 대본을 작성해줘.
-        
-        데이터 형식: 반드시 아래 구조의 JSON 배열만 반환해.
-        각 슬라이드 타입: 'cover', 'intro', 'point', 'point', 'point', 'outro' 순서대로 총 6개.
-        
-        항목 상세:
-        1. type: 'cover' -> title (메인 제목), subtitle (설명)
-        2. type: 'intro' -> text (공감 유도 문구)
-        3. type: 'point' -> title (소제목), text (세부 내용)
-        4. type: 'outro' -> title (마무리 문구), subtitle (강조), text (행동 유도)
+        let prompt;
+        if (isCaptionRequest) {
+            prompt = subject; // Use the provided prompt directly if it's a caption request
+        } else {
+            prompt = `
+            주제: "${subject}"
+            이 주제로 인스타그램 카드뉴스 6장 분량의 가독성 좋은 대본을 작성해줘.
+            
+            데이터 형식: 반드시 아래 구조의 JSON 배열만 반환해.
+            각 슬라이드 타입: 'cover', 'intro', 'point', 'point', 'point', 'outro' 순서대로 총 6개.
+            
+            항목 상세:
+            1. type: 'cover' -> title (메인 제목), subtitle (설명)
+            2. type: 'intro' -> text (공감 유도 문구)
+            3. type: 'point' -> title (소제목), text (세부 내용)
+            4. type: 'outro' -> title (마무리 문구), subtitle (강조), text (행동 유도)
 
-        예시: [{"type":"cover", "title":"...", "subtitle":"..."}, ...]
-        한국어로 작성하고, MZ세대가 좋아할만한 트렌디하고 간결한 문체를 사용해.
-        `;
+            예시: [{"type":"cover", "title":"...", "subtitle":"..."}, ...]
+            한국어로 작성하고, MZ세대가 좋아할만한 트렌디하고 간결한 문체를 사용해.
+            `;
+        }
 
         let textResult = "";
         if (userOpenAIKey) {
@@ -50,6 +55,7 @@ export async function POST(request) {
                 body: JSON.stringify({
                     model: "gpt-4o-mini",
                     messages: [{ role: "user", content: prompt }]
+                    // Removed response_format json for generic text requests
                 })
             });
             const data = await res.json();
@@ -59,6 +65,10 @@ export async function POST(request) {
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const result = await model.generateContent(prompt);
             textResult = result.response.text();
+        }
+
+        if (isCaptionRequest) {
+            return NextResponse.json({ text: textResult });
         }
 
         const jsonMatch = textResult.match(/\[.*\]/s);

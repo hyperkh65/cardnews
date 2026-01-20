@@ -324,6 +324,11 @@
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
+.instaBtn {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2362 75%, #bc1888 100%);
+    color: white !important;
+}
+
 /* AI Delay Feedback UI */
 .aiDelayBanner {
     background-color: rgba(30, 41, 59, 0.95);
@@ -635,4 +640,62 @@
 
 .saveBtn:hover {
     background: #2563eb;
+}
+
+/* Instagram Caption Styles */
+.captionContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.captionArea {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    color: #f8fafc;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    font-family: inherit;
+    outline: none;
+}
+
+.captionArea:focus {
+    border-color: #3b82f6;
+}
+
+.captionActions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.copyBtn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.copyBtn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.copyHint {
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
 }

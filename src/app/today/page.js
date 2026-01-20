@@ -16,7 +16,11 @@ import {
     ArrowRight,
     Settings,
     X,
-    Key
+    Key,
+    Instagram,
+    Copy,
+    Sparkles,
+    CheckCircle
 } from 'lucide-react';
 import styles from './today.module.css';
 import html2canvas from 'html2canvas';
@@ -33,6 +37,10 @@ export default function TodaysMenuPage() {
     const [error, setError] = useState(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [userKeys, setUserKeys] = useState({ gemini: '', openai: '' });
+    const [isCaptionOpen, setIsCaptionOpen] = useState(false);
+    const [isCaptionLoading, setIsCaptionLoading] = useState(false);
+    const [generatedCaption, setGeneratedCaption] = useState('');
+    const [copyStatus, setCopyStatus] = useState(false);
 
     const cardRef = useRef(null);
     const hiddenContainerRef = useRef(null);
@@ -81,6 +89,74 @@ export default function TodaysMenuPage() {
         localStorage.setItem('2days_openai_key', userKeys.openai);
         setIsSettingsOpen(false);
         alert('설정이 저장되었습니다. 다음 분석부터 적용됩니다.');
+    };
+
+    const generateInstagramCaption = async () => {
+        if (!activeReport) return;
+        setIsCaptionOpen(true);
+        setIsCaptionLoading(true);
+        setCopyStatus(false);
+
+        try {
+            const newsTitles = activeReport.slides
+                .filter(s => s.type === 'news')
+                .flatMap(s => s.items.map(it => it.title))
+                .join(', ');
+
+            const prompt = `
+            뉴스를 바탕으로 인스타그램에 올릴 감성적이고 트렌디한 캡션을 작성해줘.
+            뉴스 제목들: [${newsTitles}]
+            
+            지침:
+            1. 첫 줄은 시선을 끄는 임팩트 있는 문구와 이모지 사용.
+            2. 주요 뉴스 3~4개를 짧고 강렬하게 요약.
+            3. "세상을 보는 눈을 넓혀보세요" 같은 감성적인 마무리.
+            4. 마지막에 뉴스 관련 해시태그 15개 정도 추가. (#경제 #투자 #재테크 등)
+            5. MZ세대가 좋아할만한 친절하고 힙한 말투 사용.
+            `;
+
+            const geminiKey = localStorage.getItem('2days_gemini_key') || "";
+            const openaiKey = localStorage.getItem('2days_openai_key') || "";
+
+            const res = await fetch('/api/maker', { // Reusing maker API for general AI task to save time, or we can make a new one. 
+                // Actually maker is structured for card news, better to call a generic AI endpoint.
+                // For now, let's use the same logic as maker but with a custom wrapper if needed.
+                // To keep it simple, I'll use a direct fetch or a small helper.
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-gemini-key': geminiKey,
+                    'x-openai-key': openaiKey
+                },
+                body: JSON.stringify({ subject: prompt, isCaptionRequest: true })
+                // I'll update maker/route.js to handle generic prompts if a flag is set.
+            });
+
+            const data = await res.json();
+            // The maker api returns an array of slides by default. 
+            // Let's modify the maker route slightly to support raw text if needed, 
+            // or just parse it if it returned text.
+
+            if (Array.isArray(data)) {
+                // If it followed the slide format, just grab any text
+                setGeneratedCaption(data[0].title + "\n\n" + data[0].text);
+            } else if (data.text) {
+                setGeneratedCaption(data.text);
+            } else {
+                // Fallback for current maker response structure if it failed to detect isCaptionRequest
+                setGeneratedCaption("AI 캡션 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+            }
+        } catch (err) {
+            setGeneratedCaption("AI 캡션 생성에 실패했습니다.");
+        } finally {
+            setIsCaptionLoading(false);
+        }
+    };
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(generatedCaption);
+        setCopyStatus(true);
+        setTimeout(() => setCopyStatus(false), 2000);
     };
 
     const handleDownloadAll = async () => {
@@ -303,6 +379,9 @@ export default function TodaysMenuPage() {
                         <button className={styles.actionBtn} onClick={handleDownloadAll}>
                             <Download size={18} /> 전체 이미지 저장 (Zip)
                         </button>
+                        <button className={`${styles.actionBtn} ${styles.instaBtn}`} onClick={generateInstagramCaption}>
+                            <Instagram size={18} /> 인스타 캡션 만들기
+                        </button>
                     </div>
 
                     <AdBanner slot="2995216079" />
@@ -353,6 +432,41 @@ export default function TodaysMenuPage() {
                         </div>
                         <div className={styles.modalFooter}>
                             <button onClick={saveSettings} className={styles.saveBtn}>저장하기</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Instagram Caption Modal */}
+            {isCaptionOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modal} style={{ maxWidth: '500px' }}>
+                        <div className={styles.modalHeader}>
+                            <h3><Instagram size={18} /> 인스타 감성 캡션 생성</h3>
+                            <button onClick={() => setIsCaptionOpen(false)}><X size={20} /></button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            {isCaptionLoading ? (
+                                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                    <RefreshCcw className="animate-spin" style={{ color: '#3b82f6', marginBottom: '15px' }} />
+                                    <p style={{ color: '#94a3b8' }}>뉴스를 분석해 인스타 감성을 한스푼 넣고 있습니다...</p>
+                                </div>
+                            ) : (
+                                <div className={styles.captionContainer}>
+                                    <textarea
+                                        className={styles.captionArea}
+                                        value={generatedCaption}
+                                        onChange={(e) => setGeneratedCaption(e.target.value)}
+                                        rows={12}
+                                    />
+                                    <div className={styles.captionActions}>
+                                        <button onClick={copyToClipboard} className={styles.copyBtn}>
+                                            {copyStatus ? <><CheckCircle size={16} /> 복사완료!</> : <><Copy size={16} /> 전체 복사하기</>}
+                                        </button>
+                                        <p className={styles.copyHint}>글과 해시태그가 복사되었습니다. 인스타 게시물에 바로 붙여넣으세요!</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
