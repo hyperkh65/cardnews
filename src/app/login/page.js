@@ -32,7 +32,10 @@ export default function LoginPage() {
 
             if (error) throw error;
 
+            // Optional: Show actual login success message
+            // alert('로그인에 성공했습니다!');
             router.push('/');
+            router.refresh();
         } catch (error) {
             alert(error.message || '로그인 중 오류가 발생했습니다.');
         } finally {

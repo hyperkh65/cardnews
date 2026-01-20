@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Triangle, Mail, Lock, User, ArrowRight, Github, Loader2 } from 'lucide-react';
@@ -45,8 +45,17 @@ export default function SignupPage() {
 
             if (error) throw error;
 
-            alert('회원가입 확인 메일이 발송되었습니다. 이메일을 확인해주세요!');
-            router.push('/login');
+            // If email confirmation is disabled in Supabase, the user is logged in immediately.
+            // If enabled, they would need to check email. 
+            // Based on user request, we assume it's disabled or we want to inform them.
+
+            if (data?.session) {
+                alert('회원가입이 완료되었습니다! TRIANGLE에 오신 것을 환영합니다.');
+                router.push('/');
+            } else {
+                alert('회원가입이 완료되었습니다. 이메일 인증을 확인하시거나 로그인을 진행해주세요.');
+                router.push('/login');
+            }
         } catch (error) {
             alert(error.message || '회원가입 중 오류가 발생했습니다.');
         } finally {
