@@ -323,6 +323,7 @@
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
+
 /* AI Delay Feedback UI */
 .aiDelayBanner {
     background-color: rgba(30, 41, 59, 0.95);
@@ -336,8 +337,13 @@
 }
 
 @keyframes slideDown {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
 
 .aiDelayText {
@@ -354,7 +360,8 @@
     gap: 12px;
 }
 
-.aiDelayBtnYes, .aiDelayBtnRetry {
+.aiDelayBtnYes,
+.aiDelayBtnRetry {
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 13px;
@@ -397,35 +404,39 @@
     right: 50px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-    padding-bottom: 10px;
+    padding-bottom: 12px;
+}
+
+.headerBrand {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cardLogo {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .cardPageNum {
-    font-size: 16px;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
 }
 
-.cardFooter {
-    position: absolute;
-    bottom: 40px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.6);
-}
+
 
 .slideTitle {
     font-size: 24px;
     font-weight: 900;
     margin-bottom: 20px;
-    color: #ffd700; /* Gold point color */
+    color: #ffd700;
+    /* Gold point color */
     letter-spacing: -1px;
 }
 
@@ -516,8 +527,15 @@
 }
 
 @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .modalHeader {

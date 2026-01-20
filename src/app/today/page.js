@@ -121,7 +121,10 @@ export default function TodaysMenuPage() {
             <>
                 {/* Safe Area Top */}
                 <div className={styles.cardHeader}>
-                    <div className={styles.cardPageNum}>{pageNum}</div>
+                    <div className={styles.headerBrand}>
+                        <div className={styles.cardLogo}>투데이즈 | 2days.kr</div>
+                        <div className={styles.cardPageNum}>{pageNum}</div>
+                    </div>
                     <div className={styles.cardDate}>
                         <span className={styles.cardDateMonth}>{month}</span>
                         <span className={styles.cardDateDay}>{day}</span>
@@ -177,11 +180,6 @@ export default function TodaysMenuPage() {
                             )}
                         </>
                     )}
-                </div>
-
-                {/* Safe Area Bottom */}
-                <div className={styles.cardFooter}>
-                    투데이즈 | 2days.kr
                 </div>
             </>
         );
