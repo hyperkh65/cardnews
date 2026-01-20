@@ -25,16 +25,24 @@ export default function TodaysMenuPage() {
     const [activeReportId, setActiveReportId] = useState(null);
     const [activeSlideIdx, setActiveSlideIdx] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const cardRef = useRef(null);
     const hiddenContainerRef = useRef(null);
 
     useEffect(() => {
         async function init() {
-            const latest = await fetchDailyEconomyReport();
-            setReports([latest]);
-            setActiveReportId(latest.id);
-            setIsLoading(false);
+            try {
+                const latest = await fetchDailyEconomyReport();
+                setReports([latest]);
+                setActiveReportId(latest.id);
+                setError(null);
+            } catch (err) {
+                console.error(err);
+                setError("AI 분석 한도(Day Limit)가 초과되었거나 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            } finally {
+                setIsLoading(false);
+            }
         }
         init();
     }, []);
@@ -44,11 +52,17 @@ export default function TodaysMenuPage() {
 
     const handleSync = async () => {
         setIsLoading(true);
-        const newReport = await fetchDailyEconomyReport();
-        setReports(prev => [newReport, ...prev]);
-        setActiveReportId(newReport.id);
-        setActiveSlideIdx(0);
-        setIsLoading(false);
+        setError(null);
+        try {
+            const newReport = await fetchDailyEconomyReport();
+            setReports(prev => [newReport, ...prev]);
+            setActiveReportId(newReport.id);
+            setActiveSlideIdx(0);
+        } catch (err) {
+            setError("데이터 동기화에 실패했습니다. (API 할당량 초과 등)");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleDownloadAll = async () => {
