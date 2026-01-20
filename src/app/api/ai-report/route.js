@@ -13,10 +13,6 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const forceRefresh = searchParams.get('refresh') === 'true';
 
-    // Return cache if it's still valid and not a forced refresh
-    if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
-        return NextResponse.json(cachedReport);
-    }
     const apiKey = (process.env.GOOGLE_GENERATIVE_AI_API_KEY || "").trim();
 
     if (!apiKey) {
@@ -43,14 +39,14 @@ export async function GET(request) {
     }
 
     try {
-        // 1. Fetch RSS from MK
+        // 1. Fetch RSS first to compare content
         const rssRes = await fetch('https://www.mk.co.kr/rss/30100041/', {
-            next: { revalidate: 300 }, // Cache for 5 mins
-            signal: AbortSignal.timeout(10000) // 10s timeout for RSS
+            next: { revalidate: 60 }, // Check RSS every minute
+            signal: AbortSignal.timeout(10000)
         });
         const xmlText = await rssRes.text();
 
-        // Robust XML parsing with safer regex
+        // Parse items to check for changes
         const items = [];
         const itemRegex = /<item>([\s\S]*?)<\/item>/g;
         let match;
@@ -65,6 +61,20 @@ export async function GET(request) {
                 title: titleMatch ? titleMatch[1] : "기사 제목 없음",
                 description: (descMatch ? descMatch[1] : "내용 없음").replace(/<[^>]*>/g, '').trim()
             });
+        }
+
+        // Check if content is actually different from cache
+        const currentTitles = items.map(i => i.title).join('|');
+        const cachedTitles = cachedReport?.slides.flatMap(s => s.items || []).map(i => i.title).join('|');
+        const isSameContent = currentTitles === cachedTitles;
+
+        // Smart Return: Use cache if it's the SAME news (even if forceRefresh is true)
+        // This saves API quota when user clicks refresh but news hasn't updated yet.
+        if (!forceRefresh || isSameContent) {
+            if (cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION || isSameContent)) {
+                console.log(isSameContent ? "Serving cache: News content hasn't changed." : "Serving cache: Time based.");
+                return NextResponse.json(cachedReport);
+            }
         }
 
         if (items.length === 0) throw new Error('No news items');
