@@ -18,7 +18,6 @@ export async function GET(request) {
     const rawKeys = process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
     const keyPool = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
 
-    // 1. Fetch Basic Data (Fast)
     async function fetchRealMarketData() {
         const marketData = { exchange: [], global: [], crypto: [], commodities: [], updatedAt: new Date().toLocaleTimeString('ko-KR') };
 
@@ -51,7 +50,7 @@ export async function GET(request) {
                 if (!price) return null;
                 const changePct = (((price - prevClose) / (prevClose || 1)) * 100).toFixed(2);
                 let displayValue = price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                if (['비트코인', '이더리움'].includes(name)) displayValue = Math.floor(price).toLocaleString();
+                if (['비트코인', '이더리움', '솔라나', '리플'].includes(name)) displayValue = Math.floor(price).toLocaleString();
                 return { name, value: displayValue, change: `${price >= prevClose ? '+' : ''}${changePct}%`, status: price >= prevClose ? 'up' : 'down' };
             } catch (e) { return null; }
         }
@@ -60,64 +59,70 @@ export async function GET(request) {
             getNaverIndex('KOSPI'), getNaverIndex('KOSDAQ'), getYahooData('환율 (USD/KRW)', 'USDKRW=X'),
             getYahooData('S&P 500', '^GSPC'), getYahooData('NASDAQ', '^IXIC'),
             getYahooData('금 (Gold)', 'GC=F'), getYahooData('은 (Silver)', 'SI=F'), getYahooData('구리 (Copper)', 'HG=F'), getYahooData('알루미늄', 'ALI=F'),
-            getYahooData('비트코인', 'BTC-USD'), getYahooData('이더리움', 'ETH-USD')
+            getYahooData('비트코인', 'BTC-USD'), getYahooData('이더리움', 'ETH-USD'), getYahooData('솔라나', 'SOL-USD'), getYahooData('리플', 'XRP-USD')
         ]);
 
         marketData.exchange = results.slice(0, 3).filter(Boolean);
         marketData.global = results.slice(3, 5).filter(Boolean);
         marketData.commodities = results.slice(5, 9).filter(Boolean);
-        marketData.crypto = results.slice(9, 11).filter(Boolean);
+        marketData.crypto = results.slice(9, 13).filter(Boolean);
         return marketData;
     }
 
     try {
-        const [rssRes, marketInfo] = await Promise.all([
-            fetch('https://www.mk.co.kr/rss/30100041/', { next: { revalidate: 60 } }),
-            fetchRealMarketData()
-        ]);
-        const xmlText = await rssRes.text();
-        const items = [];
-        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-        let match;
-        while ((match = itemRegex.exec(xmlText)) !== null && items.length < 6) {
-            const content = match[1];
-            const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
-            const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
-            items.push({
-                title: (titleMatch ? titleMatch[1] : "경제 뉴스").replace(/<[^>]*>/g, '').trim(),
-                description: (descMatch ? descMatch[1] : "내용 생략").replace(/<[^>]*>/g, '').trim()
-            });
+        let items = [];
+        try {
+            const rssRes = await fetch('https://www.mk.co.kr/rss/30100041/', { signal: AbortSignal.timeout(5000) });
+            const xmlText = await rssRes.text();
+            const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+            let match;
+            while ((match = itemRegex.exec(xmlText)) !== null && items.length < 10) {
+                const content = match[1];
+                const titleMatch = content.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || content.match(/<title>([\s\S]*?)<\/title>/);
+                const descMatch = content.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || content.match(/<description>([\s\S]*?)<\/description>/);
+                items.push({
+                    title: (titleMatch ? titleMatch[1] : "경제 뉴스").replace(/<[^>]*>/g, '').trim(),
+                    description: (descMatch ? descMatch[1] : "내용 생략").replace(/<[^>]*>/g, '').trim()
+                });
+            }
+        } catch (e) { console.error("RSS Fetch Fail"); }
+
+        if (items.length === 0) items = [{ title: "뉴스 데이터를 불러올 수 없습니다.", description: "나중에 다시 시도해 주세요." }];
+
+        if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
+            return NextResponse.json({ ...cachedReport, isAIFilled: true });
         }
 
-        // Return Cache if not forced
-        if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
-            return NextResponse.json({ ...cachedReport, isAIFilled: true, isPartial: false });
-        }
+        const marketInfo = await fetchRealMarketData();
 
         const buildSlides = (newsData, mInfo) => {
-            const newsSlides = [];
-            for (let i = 0; i < newsData.length; i += 2) {
-                newsSlides.push({ type: 'news', items: newsData.slice(i, i + 2) });
-            }
-            return [
-                ...newsSlides,
-                { type: 'market', title: '국내외 증시 지표', items: [...(mInfo?.exchange || []), ...(mInfo?.global || [])] },
-                { type: 'market', title: '원자재 및 가상자산', items: [...(mInfo?.commodities || []), ...(mInfo?.crypto || [])] }
+            const slides = [
+                { type: 'cover', title: '투데이즈 경제 뉴스', subtitle: 'AI가 실시간으로 분석한 오늘의 주요 경제 브리핑' }
             ];
+
+            // 10 news items -> 5 slides (2 each)
+            for (let i = 0; i < newsData.length; i += 2) {
+                slides.push({ type: 'news', title: '오늘의 주요 경제 기사', items: newsData.slice(i, i + 2) });
+            }
+
+            slides.push({ type: 'market', title: '국내외 주요 증시 지표', items: [...(mInfo?.exchange || []), ...(mInfo?.global || [])] });
+            slides.push({ type: 'market', title: '원자재 현황', items: mInfo?.commodities || [] });
+            slides.push({ type: 'market', title: '가상자산 시세', items: mInfo?.crypto || [] });
+
+            return slides;
         };
 
-        // Try AI with a strict timeout to avoid long waits
         let aiResults = null;
         let isAIFilled = false;
 
         if (keyPool.length > 0) {
             try {
-                // Racing AI with a timeout (optional, but let's try rotation first)
                 const genAI = new GoogleGenerativeAI(keyPool[0]);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const prompt = `주어진 뉴스 10개를 각각 요약(summary)하고 통찰(insight)을 JSON 배열로 출력해줘. 순서 엄격 준수. 뉴스 제목들: [${items.map(i => i.title).join(',')}]`;
                 const result = await Promise.race([
-                    model.generateContent(`뉴스 요약 JSON:[${items.map(i => i.title).join(',')}]`),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+                    model.generateContent(prompt),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 12000))
                 ]);
                 const text = result.response.text();
                 const jsonMatch = text.match(/\[.*\]/s);
@@ -125,19 +130,17 @@ export async function GET(request) {
                     aiResults = JSON.parse(jsonMatch[0]);
                     isAIFilled = true;
                 }
-            } catch (e) {
-                console.log("AI Fast analysis failed or timeout. Returning partial data.");
-            }
+            } catch (e) { console.log("AI analysis skipped/slow."); }
         }
 
         const newsItems = items.map((it, idx) => ({
             id: idx + 1,
             title: it.title,
             bullets: [aiResults?.[idx]?.summary || it.description.substring(0, 80)],
-            insight: aiResults?.[idx]?.insight || null // Mark as null if no AI
+            insight: aiResults?.[idx]?.insight || null
         }));
 
-        const reportData = {
+        const finalReport = {
             id: `report-${Date.now()}`,
             date: new Date().toISOString().split('T')[0].split('-').join('.'),
             time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
@@ -146,12 +149,12 @@ export async function GET(request) {
         };
 
         if (isAIFilled) {
-            cachedReport = reportData;
+            cachedReport = finalReport;
             lastFetchTime = Date.now();
-            supabaseAdmin.from('news_reports').insert([{ content: reportData, content_hash: items.map(i => i.title).join('|') }]).then();
+            supabaseAdmin.from('news_reports').insert([{ content: finalReport, content_hash: items.map(i => i.title).join('|') }]).then();
         }
 
-        return NextResponse.json(reportData);
+        return NextResponse.json(finalReport);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

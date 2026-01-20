@@ -90,8 +90,11 @@ export default function TodaysMenuPage() {
         return `slide-${i}`;
     };
 
-    const renderSlideContent = (slide, report) => {
+    const renderSlideContent = (slide, report, idx) => {
         if (!slide) return null;
+
+        const totalSlides = report.slides.length;
+        const pageNum = `${idx + 1}/${totalSlides}`;
 
         const day = report.date.split('.')[2].replace(/^0/, '');
         const monthNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
@@ -100,55 +103,69 @@ export default function TodaysMenuPage() {
 
         return (
             <>
-                {/* Date Badge (Safe Area Top) */}
-                <div className={styles.cardDate}>
-                    <span className={styles.cardDateMonth}>{month}</span>
-                    <span className={styles.cardDateDay}>{day}</span>
+                {/* Safe Area Top */}
+                <div className={styles.cardHeader}>
+                    <div className={styles.cardPageNum}>{pageNum}</div>
+                    <div className={styles.cardDate}>
+                        <span className={styles.cardDateMonth}>{month}</span>
+                        <span className={styles.cardDateDay}>{day}</span>
+                    </div>
                 </div>
 
                 <div className={styles.cardContentWrapper}>
                     {slide.type === 'cover' && (
-                        <div>
+                        <div className={styles.newCover}>
                             <div className={styles.coverBadge}>TRIANGLE ECONOMY</div>
-                            <h1 className={styles.coverTitle}>투데이즈<br />{report.date.split('.').slice(1).join('.')} 뉴스</h1>
-                            <p className={styles.coverSubtitle}>{slide.subtitle}</p>
+                            <h1 className={styles.newCoverTitle}>투데이즈<br /><span className={styles.titleDate}>{report.date.split('.').slice(1).join('.')}</span> 뉴스</h1>
+                            <div className={styles.coverDivider}></div>
+                            <p className={styles.newCoverSubtitle}>AI가 실시간으로 분석한 오늘의 경제 브리핑</p>
+                            <div className={styles.coverWeb}>2days.kr</div>
                         </div>
                     )}
 
-                    {slide.type === 'news' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                            {slide.items.map((item, idx) => (
-                                <div key={idx} className={styles.newsItem}>
-                                    <h2 className={styles.newsTitle}>{item.id}. {item.title}</h2>
-                                    <div className={styles.bulletList}>
-                                        {item.bullets.map((bullet, blIdx) => (
-                                            <p key={blIdx} className={styles.bulletItem}>{bullet}</p>
-                                        ))}
-                                        {item.insight && (
-                                            <span className={styles.aiInsight}>투데이즈 인사이트: {item.insight}</span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {slide.type === 'market' && (
-                        <div className={styles.marketSection}>
-                            <h1 className={styles.marketTitle}>{slide.title}</h1>
-                            {slide.items.map((item, idx) => (
-                                <div key={idx} className={styles.marketRow}>
-                                    <span className={styles.marketName}>{item.name}</span>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div className={styles.marketValue}>{item.value}</div>
-                                        <div className={styles.marketChange} style={{ color: item.status === 'up' ? '#ff3b30' : '#30b0c7' }}>
-                                            {item.change}
+                    {slide.type !== 'cover' && (
+                        <>
+                            <h2 className={styles.slideTitle}>{slide.title}</h2>
+                            {slide.type === 'news' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', marginTop: '10px' }}>
+                                    {slide.items.map((item, iIdx) => (
+                                        <div key={iIdx} className={styles.newsItem}>
+                                            <h3 className={styles.newsTitle}>{item.id}. {item.title}</h3>
+                                            <div className={styles.bulletList}>
+                                                {item.bullets.map((bullet, blIdx) => (
+                                                    <p key={blIdx} className={styles.bulletItem}>{bullet}</p>
+                                                ))}
+                                                {item.insight && (
+                                                    <span className={styles.aiInsight}>💡 {item.insight}</span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            )}
+
+                            {slide.type === 'market' && (
+                                <div className={styles.marketSection}>
+                                    {slide.items.map((item, mIdx) => (
+                                        <div key={mIdx} className={styles.marketRow}>
+                                            <span className={styles.marketName}>{item.name}</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div className={styles.marketValue}>{item.value}</div>
+                                                <div className={styles.marketChange} style={{ color: item.status === 'up' ? '#ff4d4d' : '#4da6ff' }}>
+                                                    {item.change}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
+                </div>
+
+                {/* Safe Area Bottom */}
+                <div className={styles.cardFooter}>
+                    투데이즈 | 2days.kr
                 </div>
             </>
         );
@@ -257,7 +274,7 @@ export default function TodaysMenuPage() {
 
                     <div className={styles.cardScaleWrapper}>
                         <div className={styles.cardContainer} ref={cardRef}>
-                            {renderSlideContent(activeSlide, activeReport)}
+                            {renderSlideContent(activeSlide, activeReport, activeSlideIdx)}
                         </div>
                     </div>
 
@@ -273,7 +290,7 @@ export default function TodaysMenuPage() {
             <div ref={hiddenContainerRef} style={{ position: 'fixed', top: -10000, left: -10000 }}>
                 {activeReport.slides.map((slide, sIdx) => (
                     <div key={sIdx} className={styles.cardContainer}>
-                        {renderSlideContent(slide, activeReport)}
+                        {renderSlideContent(slide, activeReport, sIdx)}
                     </div>
                 ))}
             </div>
