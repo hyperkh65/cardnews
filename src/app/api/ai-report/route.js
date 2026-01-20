@@ -68,48 +68,43 @@ export async function GET(request) {
         const cachedTitles = cachedReport?.slides.flatMap(s => s.items || []).map(i => i.title).join('|');
         const isSameContent = currentTitles === cachedTitles;
 
-        // Smart Return: Use cache if it's the SAME news (even if forceRefresh is true)
-        // This saves API quota when user clicks refresh but news hasn't updated yet.
-        if (!forceRefresh || isSameContent) {
-            if (cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION || isSameContent)) {
-                console.log(isSameContent ? "Serving cache: News content hasn't changed." : "Serving cache: Time based.");
-                return NextResponse.json(cachedReport);
-            }
+        // Smart Return: Use cache if not forceRefresh AND content is same
+        if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION || isSameContent)) {
+            console.log("Serving cached report.");
+            return NextResponse.json(cachedReport);
         }
 
         if (items.length === 0) throw new Error('No news items');
 
-        // 2. AI Request with Retry & Fallback
+        // 2. AI Request with Retry
         const bulkPrompt = `
         경제 뉴스 ${items.length}건을 인스타그램 카드뉴스용으로 요약해줘.
         ${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description.substring(0, 300)}]`).join('\n\n')}
 
         질문/사족 생략, 오직 JSON 배열만 출력. 
-        형식: [{"summary": "한두문장 요약", "insight": "전략적 인사이트"}, ...]
+        형식: [{"summary": "한두문장 요약", "insight": "핵심 인사이트 (최대한 구체적이고 전문적으로)"}, ...]
         한국어로 뉴스 개수에 맞춰 정확히 ${items.length}개를 작성해라.
         `;
 
         let aiResults = [];
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Stable model
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const response = await generateWithRetry(model, bulkPrompt);
             const text = response.text();
             const jsonMatch = text.match(/\[.*\]/s);
             if (jsonMatch) aiResults = JSON.parse(jsonMatch[0]);
         } catch (apiError) {
-            console.error("AI failed after retries, using Smart Fallback:", apiError.message);
-            // Smart Fallback summary from text
-            aiResults = items.map(item => ({
-                summary: item.description.length > 80 ? item.description.substring(0, 80) + "..." : item.description,
-                insight: "주요 경제 흐름을 면밀히 분석하고 대응할 필요가 있습니다."
-            }));
+            console.error("AI failed after retries:", apiError.message);
+            // Throw error to UI so user knows it's a quota issue. 
+            // The UI will handle this and show the "try again later" message.
+            throw new Error('AI 분석 한도가 초과되었습니다. 잠시 후 다시 시도해 주세요.');
         }
 
         // 3. Structure Final Data
         const newsItems = items.map((item, idx) => {
             const aiData = aiResults[idx] || {
                 summary: item.description.substring(0, 100),
-                insight: "추가적인 시장 변화를 예의주시해야 합니다."
+                insight: "시장 지표 분석 지연 중"
             };
             return {
                 id: idx + 1,
@@ -137,6 +132,9 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('Final API Error:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({
+            error: error.message,
+            isQuotaExceeded: error.message.includes('한도') || error.message.includes('429')
+        }, { status: 500 });
     }
 }

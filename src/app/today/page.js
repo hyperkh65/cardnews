@@ -125,7 +125,7 @@ export default function TodaysMenuPage() {
                                             <p key={blIdx} className={styles.bulletItem}>{bullet}</p>
                                         ))}
                                         {item.insight && (
-                                            <span className={styles.aiInsight}>{item.insight}</span>
+                                            <span className={styles.aiInsight}>투데이즈 인사이트: {item.insight}</span>
                                         )}
                                     </div>
                                 </div>
@@ -158,7 +158,8 @@ export default function TodaysMenuPage() {
         return (
             <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <RefreshCcw className="animate-spin text-blue-500" size={48} />
-                <p style={{ marginTop: 20, color: '#71717a' }}>금융 데이터 분석 중...</p>
+                <p style={{ marginTop: 20, color: '#71717a', fontSize: '18px', fontWeight: 'bold' }}>AI가 오늘의 실시간 경제 정보를 분석 중입니다...</p>
+                <p style={{ marginTop: 8, color: '#a1a1aa' }}>잠시만 기다려 주세요 (약 10~20초 소요)</p>
             </div>
         );
     }
@@ -166,13 +167,18 @@ export default function TodaysMenuPage() {
     if (error || !activeReport) {
         return (
             <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                <div style={{ textAlign: 'center', maxWidth: '400px' }}>
-                    <p style={{ color: '#ef4444', marginBottom: '20px', fontSize: '16px', lineHeight: '1.6' }}>
-                        {error || "데이터를 불러오지 못했습니다."}
+                <div style={{ textAlign: 'center', maxWidth: '400px', background: '#1e293b', padding: '40px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '12px', color: 'white' }}>AI 분석 한도 초과 및 지연</h3>
+                    <p style={{ color: '#94a3b8', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
+                        현재 AI 서비스 이용자가 많아 분석이 지연되고 있습니다.<br />
+                        잠시 후 다시 시도해 주시거나,<br />
+                        왼쪽 히스토리에서 이전 리포트를 확인해 주세요.
                     </p>
-                    <button onClick={handleSync} className={styles.viewBtnActive} style={{ padding: '12px 24px', borderRadius: '12px' }}>
+                    <button onClick={handleSync} className={styles.viewBtnActive} style={{ padding: '12px 32px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', width: '100%' }}>
                         다시 시도하기
                     </button>
+                    <Link href="/" style={{ display: 'block', marginTop: '16px', color: '#64748b', fontSize: '14px' }}>홈으로 이동</Link>
                 </div>
             </div>
         );

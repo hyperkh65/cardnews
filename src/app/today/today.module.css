@@ -234,27 +234,18 @@
 /* ... existing cover styles ... */
 
 .aiInsight {
-    display: inline-flex;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.15);
+    display: block;
+    background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 3px solid #60a5fa;
     color: #ffffff;
-    font-weight: 700;
-    font-size: 11px;
-    margin-top: 10px;
-    padding: 4px 10px;
+    font-weight: 600;
+    font-size: 13px;
+    margin-top: 15px;
+    padding: 10px 14px;
     border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.aiInsight::before {
-    content: "AI INSIGHT";
-    margin-right: 8px;
-    color: #60a5fa;
-    /* Cleaner Light Blue instead of Yellow */
-    font-weight: 900;
+    line-height: 1.5;
+    word-break: keep-all;
 }
 
 
