@@ -191,13 +191,15 @@ export default function TodaysMenuPage() {
                                 className={`${styles.viewBtn} ${activeSlideIdx === idx ? styles.viewBtnActive : ''}`}
                                 onClick={() => setActiveSlideIdx(idx)}
                             >
-                                {idx === 0 ? '표지' : `Page ${idx}`}
+                                {idx === 0 ? '표지' : `P${idx}`}
                             </button>
                         ))}
                     </div>
 
-                    <div className={styles.cardContainer} ref={cardRef}>
-                        {renderSlideContent(activeSlide, activeReport)}
+                    <div className={styles.cardScaleWrapper}>
+                        <div className={styles.cardContainer} ref={cardRef}>
+                            {renderSlideContent(activeSlide, activeReport)}
+                        </div>
                     </div>
 
                     <div className={styles.downloadBar}>

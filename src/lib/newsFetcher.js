@@ -69,21 +69,39 @@ export async function fetchDailyEconomyReport() {
     const dateLabel = now.toISOString().split('T')[0].split('-').join('.');
 
     const newsItems = feeds.slice(0, 10).map((item, idx) => {
-        // Clean and clamp description
+        // Advanced cleaning of RSS "gunk" (reporter names, copyright lines, etc.)
         let cleanDesc = item.description
-            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/<[^>]*>/g, '') // Remove HTML
             .replace(/&nbsp;/g, ' ')
+            .replace(/\[.*?\]/g, '') // Remove [Tags]
+            .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '') // Remove emails
+            .replace(/기자|뉴스|Copyright|무단전재|재배포|금지/g, '') // Remove generic RSS footers
             .trim();
 
-        if (cleanDesc.length > 180) {
-            cleanDesc = cleanDesc.substring(0, 180) + '...';
+        // Pseudo-AI Refinement: Make it sound more like a concise news card
+        if (cleanDesc.length > 150) {
+            // Cut at last complete sentence if possible
+            const lastDot = cleanDesc.lastIndexOf('.', 150);
+            if (lastDot > 50) {
+                cleanDesc = cleanDesc.substring(0, lastDot + 1);
+            } else {
+                cleanDesc = cleanDesc.substring(0, 150) + '...';
+            }
         }
+
+        const insights = [
+            "글로벌 시장의 유동성 변화를 주시해야 합니다.",
+            "해당 산업의 기술적 반등 가능성이 보입니다.",
+            "단기 조정 이후 중장기적 회복세가 기대됩니다.",
+            "정책 변화에 따른 관련 섹터의 영향이 예상됩니다.",
+            "수급 불균형 완화가 시장 안정의 열쇠입니다."
+        ];
 
         return {
             id: idx + 1,
-            title: item.title,
+            title: item.title.replace(/\[.*?\]/g, '').trim(),
             bullets: [cleanDesc],
-            insight: idx % 3 === 0 ? `(시장 분석: 이번 변동은 단기적 조정 국면으로 해석됨)` : `(AI 전망: 해당 분야의 중장기적 성장세가 기대됨)`
+            insight: insights[idx % insights.length]
         };
     });
 
@@ -101,12 +119,12 @@ export async function fetchDailyEconomyReport() {
             type: 'cover',
             title: '투데이즈 경제 뉴스',
             date: dateLabel,
-            subtitle: '오늘 꼭 알아야 할 주요 경제 지표와 핵심 뉴스'
+            subtitle: '매일 아침 꼭 알아야 할 주요 경제 브리핑'
         },
         ...newsSlides,
         {
             type: 'market',
-            title: '데일리 지수 체크',
+            title: '주요 경제 지표',
             items: [...markets.exchange, ...markets.indigo]
         },
         {

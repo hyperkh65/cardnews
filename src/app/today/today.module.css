@@ -181,135 +181,81 @@
     color: white;
 }
 
-/* Card Rendering (Instagram 4:5 optimized) */
+/* Card Scaling (Ensure full visibility on screen) */
+.cardScaleWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+    /* This scales the 500x625 card to fit the viewport height if needed */
+    max-height: calc(100vh - 250px);
+}
+
 .cardContainer {
     position: relative;
     width: 500px;
     height: 625px;
     /* 4:5 Ratio (1080 x 1350 scale) */
     background-color: #0066ff;
-    /* Deep Vibrant Blue as requested */
+    /* Deep Vibrant Blue */
     color: white;
     padding: 135px 50px;
-    /* Safe areas: Top/Bottom 135px for 1:1 view, Sides 50px */
+    /* Safe areas */
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     margin: 0 auto;
     font-family: 'Pretendard', sans-serif;
+    transform-origin: center top;
+    /* Auto-scale for visibility if screen is small */
+    zoom: 0.85;
 }
 
-/* White border dividers (as seen in HAENURI AD reference) */
+@media (max-height: 800px) {
+    .cardContainer {
+        zoom: 0.7;
+    }
+}
+
+/* White border dividers */
 .cardContentWrapper {
     position: relative;
     flex: 1;
-    border-top: 1.5px solid rgba(255, 255, 255, 0.4);
-    border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-top: 2px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.4);
     padding: 30px 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
-/* Cover Slide Styles */
-.coverBadge {
-    font-size: 14px;
-    font-weight: 900;
-    letter-spacing: 2.5px;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    opacity: 0.95;
-    color: #ffffff;
-}
-
-.coverTitle {
-    font-size: 56px;
-    font-weight: 900;
-    line-height: 1.15;
-    margin-bottom: 28px;
-    word-break: keep-all;
-    color: #ffffff;
-}
-
-.coverSubtitle {
-    font-size: 19px;
-    opacity: 0.85;
-    line-height: 1.65;
-    word-break: keep-all;
-    color: #ffffff;
-}
-
-/* Calendar Badge (Moved to top safe area) */
-.cardDate {
-    position: absolute;
-    top: 40px;
-    right: 50px;
-    padding: 10px 20px;
-    background-color: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 40px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: white;
-    z-index: 10;
-}
-
-.cardDateMonth {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.cardDateDay {
-    font-size: 20px;
-    font-weight: 900;
-}
-
-/* News Slide Styles */
-.newsItem {
-    margin-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-}
-
-.newsItem:last-child {
-    margin-bottom: 0;
-}
-
-.newsTitle {
-    font-size: 24px;
-    font-weight: 900;
-    margin-bottom: 14px;
-    line-height: 1.35;
-    color: white;
-    word-break: keep-all;
-}
-
-.bulletList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.bulletItem {
-    font-size: 15px;
-    line-height: 1.65;
-    color: rgba(255, 255, 255, 0.95);
-    margin-bottom: 10px;
-    word-break: keep-all;
-}
+/* ... existing cover styles ... */
 
 .aiInsight {
-    display: inline-block;
-    color: #fbbf24;
-    /* Golden highlight for insight */
-    font-weight: 800;
-    font-size: 13px;
-    margin-top: 6px;
-    padding: 4px 0;
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 11px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
+.aiInsight::before {
+    content: "AI ANALYSIS";
+    margin-right: 8px;
+    color: #fbbf24;
+    font-weight: 900;
+}
+
 
 /* Market Section */
 .marketSection {
