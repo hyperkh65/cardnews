@@ -1,7 +1,12 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 /**
  * newsFetcher.js
  * Logic to fetch and process real economy data (RSS & Market APIs)
  */
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_KEY);
+
 
 /**
  * Real RSS Fetching Logic via Server Proxy
@@ -61,51 +66,59 @@ export async function fetchDailyEconomyReport() {
     const feeds = await fetchRSS('mk');
     const markets = await fetchMarketData();
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const now = new Date();
     const isAM = now.getHours() < 12;
     const timeLabel = isAM ? "08:00 AM" : "08:00 PM";
     const dateLabel = now.toISOString().split('T')[0].split('-').join('.');
 
-    const newsItems = feeds.slice(0, 10).map((item, idx) => {
-        // Advanced cleaning of RSS "gunk" (reporter names, copyright lines, etc.)
-        let cleanDesc = item.description
-            .replace(/<[^>]*>/g, '') // Remove HTML
-            .replace(/&nbsp;/g, ' ')
-            .replace(/\[.*?\]/g, '') // Remove [Tags]
-            .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '') // Remove emails
-            .replace(/기자|뉴스|Copyright|무단전재|재배포|금지/g, '') // Remove generic RSS footers
-            .trim();
+    // Limit to top 6 news for better AI performance and card layout (3 pages total)
+    const rawNews = feeds.slice(0, 6);
 
-        // Pseudo-AI Refinement: Make it sound more like a concise news card
-        if (cleanDesc.length > 150) {
-            // Cut at last complete sentence if possible
-            const lastDot = cleanDesc.lastIndexOf('.', 150);
-            if (lastDot > 50) {
-                cleanDesc = cleanDesc.substring(0, lastDot + 1);
-            } else {
-                cleanDesc = cleanDesc.substring(0, 150) + '...';
-            }
+    const newsItems = await Promise.all(rawNews.map(async (item, idx) => {
+        try {
+            const prompt = `
+            다음 경제 뉴스 기사를 인스타그램 카드뉴스용으로 요약해줘.
+            제목: ${item.title}
+            내용: ${item.description}
+
+            조건:
+            1. 핵심 내용을 1~2문장의 아주 짧은 요약문으로 작성할 것. (50자 내외)
+            2. 이 기사가 시장에 주는 시사점이나 전문가적 인사이트를 1문장으로 작성할 것. (예: "금리 인상 속도 조절의 신호탄으로 보입니다.")
+            3. 불필요한 수식어는 빼고 담백하게 작성할 것.
+            
+            추천 형식(JSON): 
+            { "summary": "요약내용", "insight": "인사이트" }
+            한글로 답변해줘.
+            `;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            // Extract JSON from response (handling potential markdown)
+            const jsonMatch = text.match(/\{.*\}/s);
+            const aiData = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: item.description.substring(0, 100), insight: "시장 상황을 예의주시해야 합니다." };
+
+            return {
+                id: idx + 1,
+                title: item.title.replace(/\[.*?\]/g, '').trim(),
+                bullets: [aiData.summary],
+                insight: aiData.insight
+            };
+        } catch (e) {
+            console.error("AI Analysis failed:", e);
+            return {
+                id: idx + 1,
+                title: item.title,
+                bullets: [item.description.substring(0, 100) + "..."],
+                insight: "실시간 분석 중 오류가 발생했습니다."
+            };
         }
+    }));
 
-        const insights = [
-            "글로벌 시장의 유동성 변화를 주시해야 합니다.",
-            "해당 산업의 기술적 반등 가능성이 보입니다.",
-            "단기 조정 이후 중장기적 회복세가 기대됩니다.",
-            "정책 변화에 따른 관련 섹터의 영향이 예상됩니다.",
-            "수급 불균형 완화가 시장 안정의 열쇠입니다."
-        ];
-
-        return {
-            id: idx + 1,
-            title: item.title.replace(/\[.*?\]/g, '').trim(),
-            bullets: [cleanDesc],
-            insight: insights[idx % insights.length]
-        };
-    });
-
-    // Split news into chunks of 2 items per slide as requested
+    // Split news into chunks of 2 items per slide
     const newsSlides = [];
     for (let i = 0; i < newsItems.length; i += 2) {
         newsSlides.push({
@@ -119,7 +132,7 @@ export async function fetchDailyEconomyReport() {
             type: 'cover',
             title: '투데이즈 경제 뉴스',
             date: dateLabel,
-            subtitle: '매일 아침 꼭 알아야 할 주요 경제 브리핑'
+            subtitle: 'AI가 실시간으로 분석한 주요 경제 브리핑'
         },
         ...newsSlides,
         {
@@ -142,3 +155,4 @@ export async function fetchDailyEconomyReport() {
         slides
     };
 }
+
