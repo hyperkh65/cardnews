@@ -163,6 +163,21 @@ export default function TodaysMenuPage() {
         );
     }
 
+    if (error || !activeReport) {
+        return (
+            <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+                    <p style={{ color: '#ef4444', marginBottom: '20px', fontSize: '16px', lineHeight: '1.6' }}>
+                        {error || "데이터를 불러오지 못했습니다."}
+                    </p>
+                    <button onClick={handleSync} className={styles.viewBtnActive} style={{ padding: '12px 24px', borderRadius: '12px' }}>
+                        다시 시도하기
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
