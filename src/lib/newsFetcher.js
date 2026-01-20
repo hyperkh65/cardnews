@@ -14,24 +14,27 @@ export async function fetchDailyEconomyReport(isRefresh = false) {
         const now = new Date();
         const isAM = now.getHours() < 12;
 
-        // The server now returns ALL slides (News + Market)
-        // We add the cover slide on the client side
-        const slides = [
-            {
-                type: 'cover',
-                title: '투데이즈 경제 뉴스',
-                date: aiData.date,
-                subtitle: 'AI가 실시간으로 분석한 주요 경제 브리핑'
-            },
-            ...aiData.slides
-        ];
+        // Match backend slides and ensure cover is there
+        let slides = aiData.slides || [];
+        if (!slides.some(s => s.type === 'cover')) {
+            slides = [
+                {
+                    type: 'cover',
+                    title: '투데이즈 경제 뉴스',
+                    date: aiData.date,
+                    subtitle: 'AI가 실시간으로 분석한 주요 경제 브리핑'
+                },
+                ...slides
+            ];
+        }
 
         return {
-            id: `report-${Date.now()}`,
+            id: aiData.id || `report-${Date.now()}`,
             date: aiData.date,
-            time: isAM ? "08:00 AM" : "08:00 PM",
+            time: aiData.time || (isAM ? "08:00 AM" : "08:00 PM"),
             type: isAM ? 'AM' : 'PM',
-            slides
+            slides: aiData.slides,
+            isAIFilled: aiData.isAIFilled
         };
     } catch (error) {
         console.error("Failed to fetch economy report:", error);

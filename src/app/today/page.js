@@ -199,6 +199,20 @@ export default function TodaysMenuPage() {
                 </div>
             </header>
 
+            {/* AI 지연 안내 배너 */}
+            {!activeReport.isAIFilled && (
+                <div className={styles.aiDelayBanner}>
+                    <div className={styles.aiDelayText}>
+                        <TrendingUp size={16} />
+                        AI 분석이 지연되고 있습니다. 기사 원문과 지표만 포함하여 진행할까요?
+                    </div>
+                    <div className={styles.aiDelayActions}>
+                        <button onClick={() => { }} className={styles.aiDelayBtnYes}>데이터만 확인하기</button>
+                        <button onClick={handleSync} className={styles.aiDelayBtnRetry}>AI 다시 시도</button>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.main}>
                 <aside className={styles.sidebar}>
                     <div className={styles.sidebarHeader}>
@@ -211,7 +225,10 @@ export default function TodaysMenuPage() {
                                 className={`${styles.historyItem} ${activeReportId === report.id ? styles.historyItemActive : ''}`}
                                 onClick={() => { setActiveReportId(report.id); setActiveSlideIdx(0); }}
                             >
-                                <span className={styles.historyDate}>{report.date}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span className={styles.historyDate}>{report.date}</span>
+                                    {report.isAIFilled && <span className={styles.aiBadge}>AI</span>}
+                                </div>
                                 <div className={styles.historyTime}>{report.type} 업데이트</div>
                             </div>
                         ))}

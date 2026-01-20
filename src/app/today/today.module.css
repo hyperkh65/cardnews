@@ -323,3 +323,68 @@
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
+/* AI Delay Feedback UI */
+.aiDelayBanner {
+    background-color: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.aiDelayText {
+    font-size: 14px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.aiDelayActions {
+    display: flex;
+    gap: 12px;
+}
+
+.aiDelayBtnYes, .aiDelayBtnRetry {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.aiDelayBtnYes {
+    background: #334155;
+    color: white;
+}
+
+.aiDelayBtnRetry {
+    background: #3b82f6;
+    color: white;
+}
+
+.aiDelayBtnRetry:hover {
+    background: #2563eb;
+    transform: scale(1.02);
+}
+
+.aiBadge {
+    background: #3b82f6;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
