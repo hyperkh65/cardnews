@@ -15,7 +15,10 @@ import {
     Triangle,
     Globe,
     LogOut,
-    Lock
+    Lock,
+    Settings,
+    X,
+    Key
 } from 'lucide-react';
 import styles from './page.module.css';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +27,8 @@ export default function LandingPage() {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [userKeys, setUserKeys] = useState({ gemini: '', openai: '' });
 
     useEffect(() => {
         // Check current session
@@ -40,6 +45,11 @@ export default function LandingPage() {
             setUser(session?.user ?? null);
         });
 
+        // Load keys from local storage
+        const savedGemini = localStorage.getItem('2days_gemini_key') || '';
+        const savedOpenAI = localStorage.getItem('2days_openai_key') || '';
+        setUserKeys({ gemini: savedGemini, openai: savedOpenAI });
+
         return () => subscription.unsubscribe();
     }, []);
 
@@ -54,6 +64,13 @@ export default function LandingPage() {
             alert('이 서비스는 회원가입 후 이용 가능합니다. 회원가입 페이지로 이동합니다.');
             router.push('/signup');
         }
+    };
+
+    const saveSettings = () => {
+        localStorage.setItem('2days_gemini_key', userKeys.gemini);
+        localStorage.setItem('2days_openai_key', userKeys.openai);
+        setIsSettingsOpen(false);
+        alert('설정이 저장되었습니다. 모든 AI 서비스에 적용됩니다.');
     };
 
     return (
@@ -83,6 +100,9 @@ export default function LandingPage() {
                     <div className={styles.navButtons}>
                         {user ? (
                             <div className={styles.userInfo}>
+                                <button onClick={() => setIsSettingsOpen(true)} className={styles.iconBtn} style={{ marginRight: 8 }} title="AI 설정">
+                                    <Settings size={20} />
+                                </button>
                                 <span className={styles.userEmail}>{user.email.split('@')[0]}님</span>
                                 <button onClick={handleLogout} className={styles.loginBtn} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <LogOut size={14} /> 로그아웃
@@ -211,6 +231,46 @@ export default function LandingPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Settings Modal */}
+            {isSettingsOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modal}>
+                        <div className={styles.modalHeader}>
+                            <h3><Key size={18} /> 통합 AI 설정 (전체 서비스 적용)</h3>
+                            <button onClick={() => setIsSettingsOpen(false)}><X size={20} /></button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p className={styles.modalDesc}>본인의 API 키를 등록하면 모든 AI 도구(리포트, 스토리, 편집기 등)에서 제한 없이 고성능 분석을 이용할 수 있습니다.</p>
+
+                            <div className={styles.inputGroup}>
+                                <label>Gemini API Key</label>
+                                <input
+                                    type="password"
+                                    placeholder="AIzaSy..."
+                                    value={userKeys.gemini}
+                                    onChange={(e) => setUserKeys({ ...userKeys, gemini: e.target.value })}
+                                />
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">키 발급받기 ↗</a>
+                            </div>
+
+                            <div className={styles.inputGroup}>
+                                <label>OpenAI API Key</label>
+                                <input
+                                    type="password"
+                                    placeholder="sk-..."
+                                    value={userKeys.openai}
+                                    onChange={(e) => setUserKeys({ ...userKeys, openai: e.target.value })}
+                                />
+                                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">키 발급받기 ↗</a>
+                            </div>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button onClick={saveSettings} className={styles.saveBtn}>저장하기</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

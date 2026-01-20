@@ -183,9 +183,16 @@ export default function OneClickMakerPage() {
         if (btn) btn.innerText = '...';
 
         try {
+            const geminiKey = localStorage.getItem('2days_gemini_key') || "";
+            const openaiKey = localStorage.getItem('2days_openai_key') || "";
+
             const res = await fetch('/api/maker', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-gemini-key': geminiKey,
+                    'x-openai-key': openaiKey
+                },
                 body: JSON.stringify({ subject })
             });
 

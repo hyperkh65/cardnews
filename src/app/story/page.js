@@ -79,9 +79,16 @@ export default function StoryCreatorPage() {
             // Start real-time AI processing
             setLoadingText('블로그 콘텐츠 분석 중...');
 
+            const geminiKey = localStorage.getItem('2days_gemini_key') || "";
+            const openaiKey = localStorage.getItem('2days_openai_key') || "";
+
             const res = await fetch('/api/story', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-gemini-key': geminiKey,
+                    'x-openai-key': openaiKey
+                },
                 body: JSON.stringify({ url })
             });
 
