@@ -25,12 +25,21 @@ export async function GET(request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Attempting 2.5-flash first, then 1.5-flash as fallback
-    let model;
-    try {
-        model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    } catch (e) {
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Function to generate content with automatic retries for Rate Limits
+    async function generateWithRetry(modelRef, prompt, retries = 2) {
+        for (let i = 0; i <= retries; i++) {
+            try {
+                const result = await modelRef.generateContent(prompt);
+                return await result.response;
+            } catch (err) {
+                if (err.message?.includes('429') && i < retries) {
+                    console.log(`Rate limit hit, retrying in ${2 * (i + 1)}s...`);
+                    await new Promise(res => setTimeout(res, 2000 * (i + 1)));
+                    continue;
+                }
+                throw err;
+            }
+        }
     }
 
     try {
@@ -54,46 +63,43 @@ export async function GET(request) {
 
             items.push({
                 title: titleMatch ? titleMatch[1] : "기사 제목 없음",
-                description: descMatch ? descMatch[1] : "내용 없음"
+                description: (descMatch ? descMatch[1] : "내용 없음").replace(/<[^>]*>/g, '').trim()
             });
         }
 
         if (items.length === 0) throw new Error('No news items');
 
-        // 2. AI Bulk Summary Request
+        // 2. AI Request with Retry & Fallback
         const bulkPrompt = `
-        다음 경제 뉴스 ${items.length}건을 인스타그램 카드뉴스용으로 요약해줘.
-        ${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description}]`).join('\n\n')}
+        경제 뉴스 ${items.length}건을 인스타그램 카드뉴스용으로 요약해줘.
+        ${items.map((n, i) => `뉴스 ${i + 1}: [제목: ${n.title}] [내용: ${n.description.substring(0, 300)}]`).join('\n\n')}
 
-        질문이나 사족은 생략하고 오직 JSON 배열만 출력해라.
+        질문/사족 생략, 오직 JSON 배열만 출력. 
         형식: [{"summary": "한두문장 요약", "insight": "전략적 인사이트"}, ...]
-        한국어로 작성해라. 뉴스 개수에 맞춰 정확히 ${items.length}개를 작성해라.
+        한국어로 뉴스 개수에 맞춰 정확히 ${items.length}개를 작성해라.
         `;
 
-        let response;
+        let aiResults = [];
         try {
-            const result = await model.generateContent(bulkPrompt);
-            response = await result.response;
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Stable model
+            const response = await generateWithRetry(model, bulkPrompt);
+            const text = response.text();
+            const jsonMatch = text.match(/\[.*\]/s);
+            if (jsonMatch) aiResults = JSON.parse(jsonMatch[0]);
         } catch (apiError) {
-            console.warn("AI content generation failed with current model, retrying with gemini-1.5-flash...", apiError.message);
-            const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const result = await fallbackModel.generateContent(bulkPrompt);
-            response = await result.response;
+            console.error("AI failed after retries, using Smart Fallback:", apiError.message);
+            // Smart Fallback summary from text
+            aiResults = items.map(item => ({
+                summary: item.description.length > 80 ? item.description.substring(0, 80) + "..." : item.description,
+                insight: "주요 경제 흐름을 면밀히 분석하고 대응할 필요가 있습니다."
+            }));
         }
 
-        const text = response.text();
-
-        // Sanitize response to find JSON
-        const jsonMatch = text.match(/\[.*\]/s);
-        if (!jsonMatch) throw new Error("AI returned invalid format");
-
-        const aiResults = JSON.parse(jsonMatch[0]);
-
-        // 3. Structure Final Data with Fallbacks
+        // 3. Structure Final Data
         const newsItems = items.map((item, idx) => {
             const aiData = aiResults[idx] || {
-                summary: item.description.substring(0, 100).replace(/<[^>]*>/g, ''),
-                insight: "시장 변동성을 예의주시하며 대응해야 합니다."
+                summary: item.description.substring(0, 100),
+                insight: "추가적인 시장 변화를 예의주시해야 합니다."
             };
             return {
                 id: idx + 1,
@@ -120,10 +126,7 @@ export async function GET(request) {
         return NextResponse.json(reportData);
 
     } catch (error) {
-        console.error('AI Report API Error:', error.message);
-        return NextResponse.json({
-            error: error.message || 'AI 분석 중 오류가 발생했습니다.',
-            details: error.stack
-        }, { status: 500 });
+        console.error('Final API Error:', error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
