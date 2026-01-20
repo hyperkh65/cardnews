@@ -74,8 +74,8 @@ export async function fetchDailyEconomyReport() {
             .replace(/<[^>]*>/g, '') // Remove HTML tags
             .trim();
 
-        if (cleanDesc.length > 200) {
-            cleanDesc = cleanDesc.substring(0, 200) + '...';
+        if (cleanDesc.length > 500) {
+            cleanDesc = cleanDesc.substring(0, 500) + '...';
         }
 
         return {

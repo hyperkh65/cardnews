@@ -174,23 +174,24 @@ export default function TodaysMenuPage() {
                     <div className={styles.cardContainer} ref={cardRef}>
                         {activeSlide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
                                     justifyContent: activeSlideIdx === 0 ? 'flex-start' : 'center',
-                                    flex: 1
+                                    flex: 1,
+                                    paddingBottom: activeSlideIdx === 0 ? 0 : 40
                                 }}>
                                     {activeSlide.items.map((item, idx) => (
                                         <div key={idx} className={styles.newsItem} style={{ marginBottom: 0 }}>
-                                            <h2 className={styles.newsTitle} style={{ fontSize: 26, marginBottom: 20 }}>{item.id}. {item.title}</h2>
+                                            <h2 className={styles.newsTitle} style={{ fontSize: 30, marginBottom: 24, lineHeight: 1.3 }}>{item.id}. {item.title}</h2>
                                             <ul className={styles.bulletList}>
                                                 {item.bullets.map((bullet, blIdx) => (
-                                                    <li key={blIdx} className={styles.bulletItem}>{bullet}</li>
+                                                    <li key={blIdx} className={styles.bulletItem} style={{ fontSize: 17, lineHeight: 1.7 }}>{bullet}</li>
                                                 ))}
                                                 {item.insight && (
-                                                    <li key="insight" className={styles.bulletItem} style={{ listStyleType: 'none', marginLeft: 0 }}>
-                                                        <span className={styles.aiInsight}>{item.insight}</span>
+                                                    <li key="insight" className={styles.bulletItem} style={{ listStyleType: 'none', marginLeft: 0, marginTop: 16 }}>
+                                                        <span className={styles.aiInsight} style={{ fontSize: 17 }}>{item.insight}</span>
                                                     </li>
                                                 )}
                                             </ul>
@@ -240,23 +241,24 @@ export default function TodaysMenuPage() {
                     <div key={sIdx} className={styles.cardContainer} style={{ marginBottom: 40 }}>
                         {slide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {sIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                {sIdx === 0 && <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
                                     justifyContent: sIdx === 0 ? 'flex-start' : 'center',
-                                    flex: 1
+                                    flex: 1,
+                                    paddingBottom: sIdx === 0 ? 0 : 40
                                 }}>
                                     {slide.items.map((item, idx) => (
                                         <div key={idx} className={styles.newsItem} style={{ marginBottom: 0 }}>
-                                            <h2 className={styles.newsTitle} style={{ fontSize: 26, marginBottom: 20 }}>{item.id}. {item.title}</h2>
+                                            <h2 className={styles.newsTitle} style={{ fontSize: 30, marginBottom: 24, lineHeight: 1.3 }}>{item.id}. {item.title}</h2>
                                             <ul className={styles.bulletList}>
                                                 {item.bullets.map((bullet, blIdx) => (
-                                                    <li key={blIdx} className={styles.bulletItem}>{bullet}</li>
+                                                    <li key={blIdx} className={styles.bulletItem} style={{ fontSize: 17, lineHeight: 1.7 }}>{bullet}</li>
                                                 ))}
                                                 {item.insight && (
-                                                    <li key="insight" className={styles.bulletItem} style={{ listStyleType: 'none', marginLeft: 0 }}>
-                                                        <span className={styles.aiInsight}>{item.insight}</span>
+                                                    <li key="insight" className={styles.bulletItem} style={{ listStyleType: 'none', marginLeft: 0, marginTop: 16 }}>
+                                                        <span className={styles.aiInsight} style={{ fontSize: 17 }}>{item.insight}</span>
                                                     </li>
                                                 )}
                                             </ul>
