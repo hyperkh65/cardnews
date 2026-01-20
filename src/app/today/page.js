@@ -174,8 +174,14 @@ export default function TodaysMenuPage() {
                     <div className={styles.cardContainer} ref={cardRef}>
                         {activeSlide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
-                                <div style={{ marginTop: activeSlideIdx === 0 ? 0 : 40 }}>
+                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 20, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '20px',
+                                    marginTop: activeSlideIdx === 0 ? 0 : 20,
+                                    flex: 1
+                                }}>
                                     {activeSlide.items.map((item, idx) => (
                                         <div key={idx} className={styles.newsItem}>
                                             <h2 className={styles.newsTitle}>{item.id}. {item.title}</h2>
@@ -235,8 +241,14 @@ export default function TodaysMenuPage() {
                     <div key={sIdx} className={styles.cardContainer} style={{ marginBottom: 40 }}>
                         {slide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {sIdx === 0 && <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
-                                <div style={{ marginTop: sIdx === 0 ? 0 : 40 }}>
+                                {sIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 20, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '20px',
+                                    marginTop: sIdx === 0 ? 0 : 20,
+                                    flex: 1
+                                }}>
                                     {slide.items.map((item, idx) => (
                                         <div key={idx} className={styles.newsItem}>
                                             <h2 className={styles.newsTitle}>{item.id}. {item.title}</h2>

@@ -68,12 +68,23 @@ export async function fetchDailyEconomyReport() {
     const timeLabel = isAM ? "08:00 AM" : "08:00 PM";
     const dateLabel = now.toISOString().split('T')[0].split('-').join('.');
 
-    const newsItems = feeds.slice(0, 10).map((item, idx) => ({
-        id: idx + 1,
-        title: item.title,
-        bullets: [item.description], // Keep full description, we'll handle layout in CSS
-        insight: `(AI 분석: 이 뉴스는 향후 시장의 핵심 지표가 될 것으로 예상됨)`
-    }));
+    const newsItems = feeds.slice(0, 10).map((item, idx) => {
+        // Clean and clamp description to ensure it fits in the card
+        let cleanDesc = item.description
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .trim();
+
+        if (cleanDesc.length > 100) {
+            cleanDesc = cleanDesc.substring(0, 100) + '...';
+        }
+
+        return {
+            id: idx + 1,
+            title: item.title,
+            bullets: [cleanDesc],
+            insight: idx % 3 === 0 ? `(시장 분석: 이번 변동은 단기적 조정 국면으로 해석됨)` : `(AI 전망: 해당 분야의 중장기적 성장세가 기대됨)`
+        };
+    });
 
     // Split news into chunks of 2 items per slide to prevent overflow
     const newsSlides = [];

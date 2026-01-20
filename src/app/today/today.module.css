@@ -197,43 +197,49 @@
 
 .cardDate {
     position: absolute;
-    top: 24px;
-    right: 24px;
-    width: 60px;
-    height: 60px;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
     background-color: #8b5cf6;
-    /* Same as the violet in screenshot */
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    z-index: 10;
 }
 
 .cardDateMonth {
-    font-size: 8px;
+    font-size: 7px;
     font-weight: 900;
     text-transform: uppercase;
+    margin-bottom: -2px;
 }
 
 .cardDateDay {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
 }
 
 .newsItem {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
 }
 
 .newsTitle {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
-    margin-bottom: 12px;
-    line-height: 1.2;
+    margin-bottom: 8px;
+    line-height: 1.3;
     display: flex;
     gap: 8px;
+    padding-right: 40px;
+    /* Avoid calendar overlap */
+    word-break: keep-all;
 }
 
 .bulletList {
