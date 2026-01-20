@@ -16,10 +16,24 @@ export default function LoginPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert('로그인되었습니다! (데모)');
-        console.log('Login Data:', formData);
+        setIsLoading(true);
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: formData.email,
+                password: formData.password,
+            });
+
+            if (error) throw error;
+
+            router.push('/');
+        } catch (error) {
+            alert(error.message || '로그인 중 오류가 발생했습니다.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -66,8 +80,8 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    <button type="submit" className={styles.submitButton}>
-                        로그인
+                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="animate-spin" size={20} /> : '로그인'}
                     </button>
                 </form>
 

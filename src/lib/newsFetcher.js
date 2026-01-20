@@ -74,8 +74,8 @@ export async function fetchDailyEconomyReport() {
             .replace(/<[^>]*>/g, '') // Remove HTML tags
             .trim();
 
-        if (cleanDesc.length > 100) {
-            cleanDesc = cleanDesc.substring(0, 100) + '...';
+        if (cleanDesc.length > 200) {
+            cleanDesc = cleanDesc.substring(0, 200) + '...';
         }
 
         return {
@@ -86,12 +86,12 @@ export async function fetchDailyEconomyReport() {
         };
     });
 
-    // Split news into chunks of 2 items per slide to prevent overflow
+    // Split news into chunks of 1 item per slide for maximum readability and zero clipping
     const newsSlides = [];
-    for (let i = 0; i < newsItems.length; i += 2) {
+    for (let i = 0; i < newsItems.length; i += 1) {
         newsSlides.push({
             type: 'news',
-            items: newsItems.slice(i, i + 2)
+            items: newsItems.slice(i, i + 1)
         });
     }
 

@@ -18,15 +18,36 @@ export default function SignupPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Validation logic would go here
+
         if (formData.password !== formData.confirmPassword) {
             alert('비밀번호가 일치하지 않습니다.');
             return;
         }
-        alert('회원가입이 완료되었습니다! (데모)');
-        console.log('Signup Data:', formData);
+
+        setIsLoading(true);
+
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+                options: {
+                    data: {
+                        full_name: formData.name,
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            alert('회원가입 확인 메일이 발송되었습니다. 이메일을 확인해주세요!');
+            router.push('/login');
+        } catch (error) {
+            alert(error.message || '회원가입 중 오류가 발생했습니다.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -105,8 +126,8 @@ export default function SignupPage() {
                         </div>
                     </div>
 
-                    <button type="submit" className={styles.submitButton}>
-                        무료로 시작하기
+                    <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="animate-spin" size={20} /> : '무료로 시작하기'}
                     </button>
                 </form>
 

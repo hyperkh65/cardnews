@@ -174,17 +174,16 @@ export default function TodaysMenuPage() {
                     <div className={styles.cardContainer} ref={cardRef}>
                         {activeSlide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 20, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                {activeSlideIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: '20px',
-                                    marginTop: activeSlideIdx === 0 ? 0 : 20,
+                                    justifyContent: activeSlideIdx === 0 ? 'flex-start' : 'center',
                                     flex: 1
                                 }}>
                                     {activeSlide.items.map((item, idx) => (
-                                        <div key={idx} className={styles.newsItem}>
-                                            <h2 className={styles.newsTitle}>{item.id}. {item.title}</h2>
+                                        <div key={idx} className={styles.newsItem} style={{ marginBottom: 0 }}>
+                                            <h2 className={styles.newsTitle} style={{ fontSize: 26, marginBottom: 20 }}>{item.id}. {item.title}</h2>
                                             <ul className={styles.bulletList}>
                                                 {item.bullets.map((bullet, blIdx) => (
                                                     <li key={blIdx} className={styles.bulletItem}>{bullet}</li>
@@ -241,17 +240,16 @@ export default function TodaysMenuPage() {
                     <div key={sIdx} className={styles.cardContainer} style={{ marginBottom: 40 }}>
                         {slide.type === 'news' ? (
                             <div style={{ flex: 1 }}>
-                                {sIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 20, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
+                                {sIdx === 0 && <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 32, color: '#3b82f6' }}>오늘의 주요 경제 뉴스</h1>}
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: '20px',
-                                    marginTop: sIdx === 0 ? 0 : 20,
+                                    justifyContent: sIdx === 0 ? 'flex-start' : 'center',
                                     flex: 1
                                 }}>
                                     {slide.items.map((item, idx) => (
-                                        <div key={idx} className={styles.newsItem}>
-                                            <h2 className={styles.newsTitle}>{item.id}. {item.title}</h2>
+                                        <div key={idx} className={styles.newsItem} style={{ marginBottom: 0 }}>
+                                            <h2 className={styles.newsTitle} style={{ fontSize: 26, marginBottom: 20 }}>{item.id}. {item.title}</h2>
                                             <ul className={styles.bulletList}>
                                                 {item.bullets.map((bullet, blIdx) => (
                                                     <li key={blIdx} className={styles.bulletItem}>{bullet}</li>
