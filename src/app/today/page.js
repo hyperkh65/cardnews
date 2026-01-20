@@ -54,7 +54,7 @@ export default function TodaysMenuPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const newReport = await fetchDailyEconomyReport();
+            const newReport = await fetchDailyEconomyReport(true); // Force refresh AI
             setReports(prev => [newReport, ...prev]);
             setActiveReportId(newReport.id);
             setActiveSlideIdx(0);

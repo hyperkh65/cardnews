@@ -23,10 +23,10 @@ async function fetchMarketData() {
     };
 }
 
-export async function fetchDailyEconomyReport() {
+export async function fetchDailyEconomyReport(isRefresh = false) {
     try {
-        // 1. Fetch AI Summarized News from our Server
-        const response = await fetch('/api/ai-report');
+        // 1. Fetch AI Summarized News from our Server (with optional cache bypass)
+        const response = await fetch(`/api/ai-report${isRefresh ? '?refresh=true' : ''}`);
         if (!response.ok) throw new Error('Server AI Error');
         const aiData = await response.json();
 

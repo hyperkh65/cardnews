@@ -1,11 +1,22 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
  * Server-side API to fetch RSS and summarize with Gemini AI
- * This is more secure and reliable than client-side calls.
  */
+
+let cachedReport = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes cache
+
 export async function GET(request) {
+    const { searchParams } = new URL(request.url);
+    const forceRefresh = searchParams.get('refresh') === 'true';
+
+    // Return cache if it's still valid and not a forced refresh
+    if (!forceRefresh && cachedReport && (Date.now() - lastFetchTime < CACHE_DURATION)) {
+        return NextResponse.json(cachedReport);
+    }
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
@@ -81,10 +92,16 @@ export async function GET(request) {
             newsSlides.push({ type: 'news', items: newsItems.slice(i, i + 2) });
         }
 
-        return NextResponse.json({
+        const reportData = {
             date: new Date().toISOString().split('T')[0].split('-').join('.'),
             slides: newsSlides
-        });
+        };
+
+        // Update cache
+        cachedReport = reportData;
+        lastFetchTime = Date.now();
+
+        return NextResponse.json(reportData);
 
     } catch (error) {
         console.error('AI Report API Error:', error);
